@@ -26,21 +26,13 @@ public class TheApplet extends Applet {
     private static final byte CHANGEDESKEY	                   	= (byte)0x12;
 
 
-	static final byte[] theDESKey =
-		new byte[] { (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA };
-
-
+	  static final byte[] theDESKey = new byte[] { (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA };
 
     // cipher instances
-    private Cipher
-	    cDES_ECB_NOPAD_enc, cDES_ECB_NOPAD_dec;
-
+    private Cipher cDES_ECB_NOPAD_enc, cDES_ECB_NOPAD_dec;
 
     // key objects
-
-    private Key
-	    secretDESKey, secretDES2Key, secretDES3Key;
-
+    private Key secretDESKey, secretDES2Key, secretDES3Key;
 
     // "Foo" (name, also sent after termining an operation)
     private byte[] name = { (byte)0x03, (byte)0x46, (byte)0x6F, (byte)0x6F };
@@ -135,18 +127,17 @@ public class TheApplet extends Applet {
 
         try { switch( buffer[ISO7816.OFFSET_INS] ) {
 
-	case INS_TESTDES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
-		testCipherGeneric( cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES, NBTESTSDESCIPHER  ); return;
-	case INS_TESTDES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
-		testCipherGeneric( cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES, NBTESTSDESUNCIPHER   ); return;
+        	case INS_TESTDES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
+        		testCipherGeneric( cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES, NBTESTSDESCIPHER  ); return;
+        	case INS_TESTDES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
+        		testCipherGeneric( cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES, NBTESTSDESUNCIPHER   ); return;
 
-	case INS_DES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
-		cipherGeneric( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); return;
-	case INS_DES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
-		cipherGeneric( apdu, cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES  ); return;
-	    }
-	} catch( Exception e ) {
-	}
+        	case INS_DES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
+        		cipherGeneric( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); return;
+        	case INS_DES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
+        		cipherGeneric( apdu, cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES  ); return;
+        	    }
+        } catch( Exception e ) {}
     }
 
     //SET INCOMMING AND RECEIVE !!! 		apdu.setIncomingAndReceive();
@@ -166,5 +157,20 @@ public class TheApplet extends Applet {
 			cipher.doFinal( dataToCipher, (short)0, (short)(keyLength/8), ciphered, (short)0 );
 	}
 
+  void changeDesKey(APDU apdu){
+
+
+  }
+
+  void uncipherFile(APDU apdu){
+
+  }
+
+  void cipherFile(APDU apdu, Cipher cipher, short keyLength){
+    apdu.setIncomingAndReceive();
+    byte[] buffer = apdu.getBuffer();
+    cipher.doFinal( buffer, (short)5, (short)buffer[4], buffer, (short)5 );
+    apdu.setOutgoingAndSend((short)5,(short)buffer[4]);
+  }
 
 }

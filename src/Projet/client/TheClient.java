@@ -14,16 +14,17 @@ public class TheClient {
 
 
 
-    private final static byte CLA_TEST				= (byte)0x90;
-    private final static byte INS_TESTDES_ECB_NOPAD_ENC       	= (byte)0x28;
-    private final static byte INS_TESTDES_ECB_NOPAD_DEC       	= (byte)0x29;
-    private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
-    private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
-    private final static byte P1_EMPTY = (byte)0x00;
-    private final static byte P2_EMPTY = (byte)0x00;
-    private static final byte CIPHERFILE		= (byte)0x10;
-    private static final byte UNCIPHERFILE		= (byte)0x11;
-    private static final byte CHANGEDESKEY		= (byte)0x12;
+    private final static byte CLA_TEST			           	= (byte)0x90;
+    private final static byte INS_TESTDES_ECB_NOPAD_ENC	= (byte)0x28;
+    private final static byte INS_TESTDES_ECB_NOPAD_DEC	= (byte)0x29;
+    private final static byte INS_DES_ECB_NOPAD_ENC    	= (byte)0x20;
+    private final static byte INS_DES_ECB_NOPAD_DEC    	= (byte)0x21;
+    private final static byte P1_EMPTY                  = (byte)0x00;
+    private final static byte P2_EMPTY                  = (byte)0x00;
+    private static final byte CIPHERFILE		            = (byte)0x10;
+    private static final byte UNCIPHERFILE		          = (byte)0x11;
+    private static final byte CHANGEDESKEY		          = (byte)0x12;
+    static final byte DATAMAXSIZE                       = (short)0x02;
 
 
     private PassThruCardService servClient = null;
@@ -47,8 +48,9 @@ public class TheClient {
 
 		    if (sm != null) {
 			    System.out.println ("got a SmartCard object!\n");
-		    } else
-			    System.out.println( "did not get a SmartCard object!\n" );
+		    } else{
+          System.out.println( "did not get a SmartCard object!\n" );
+        }
 
 		    this.initNewCard( sm );
 
@@ -68,13 +70,13 @@ public class TheClient {
     private ResponseAPDU sendAPDU( CommandAPDU cmd, boolean display ) {
 	    ResponseAPDU result = null;
 	    try {
-		result = this.servClient.sendCommandAPDU( cmd );
-		if(display)
-			displayAPDU(cmd, result);
+		      result = this.servClient.sendCommandAPDU( cmd );
+		      if(display)
+			       displayAPDU(cmd, result);
 	    } catch( Exception e ) {
            	 System.out.println( "Exception caught in sendAPDU: " + e.getMessage() );
            	 java.lang.System.exit( -1 );
-            }
+      }
 	    return result;
     }
 
@@ -95,8 +97,8 @@ public class TheClient {
 
 
     public void displayAPDU( CommandAPDU termCmd, ResponseAPDU cardResp ) {
-	System.out.println( "--> Term: " + removeCR( HexString.hexify( termCmd.getBytes() ) ) );
-	System.out.println( "<-- Card: " + removeCR( HexString.hexify( cardResp.getBytes() ) ) );
+	     System.out.println( "--> Term: " + removeCR( HexString.hexify( termCmd.getBytes() ) ) );
+	      System.out.println( "<-- Card: " + removeCR( HexString.hexify( cardResp.getBytes() ) ) );
     }
 
 
@@ -111,49 +113,48 @@ public class TheClient {
 
 
     private boolean selectApplet() {
-	 boolean cardOk = false;
-	 try {
-	    CommandAPDU cmd = new CommandAPDU( new byte[] {
-                (byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00, (byte)0x0A,
-		(byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62,
-		(byte)0x03, (byte)0x01, (byte)0x0C, (byte)0x06, (byte)0x01
+	     boolean cardOk = false;
+	      try {
+	         CommandAPDU cmd = new CommandAPDU( new byte[] {
+                  (byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00, (byte)0x0A,
+		              (byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62,
+		              (byte)0x03, (byte)0x01, (byte)0x0C, (byte)0x06, (byte)0x01
             } );
             ResponseAPDU resp = this.sendAPDU( cmd );
-	    if( this.apdu2string( resp ).equals( "90 00" ) )
-		    cardOk = true;
-	 } catch(Exception e) {
+	          if( this.apdu2string( resp ).equals( "90 00" ) )
+		           cardOk = true;
+	      } catch(Exception e) {
             System.out.println( "Exception caught in selectApplet: " + e.getMessage() );
             java.lang.System.exit( -1 );
         }
-	return cardOk;
+	       return cardOk;
     }
 
 
     private void initNewCard( SmartCard card ) {
-	if( card != null )
-		System.out.println( "Smartcard inserted\n" );
-	else {
-		System.out.println( "Did not get a smartcard" );
-		System.exit( -1 );
-	}
+	     if( card != null )
+		     System.out.println( "Smartcard inserted\n" );
+	     else {
+		       System.out.println( "Did not get a smartcard" );
+		       System.exit( -1 );
+	     }
 
-	System.out.println( "ATR: " + HexString.hexify( card.getCardID().getATR() ) + "\n");
+	     System.out.println( "ATR: " + HexString.hexify( card.getCardID().getATR() ) + "\n");
 
+	     try {
+		       this.servClient = (PassThruCardService)card.getCardService( PassThruCardService.class, true );
+	     } catch( Exception e ) {
+		       System.out.println( e.getMessage() );
+	     }
 
-	try {
-		this.servClient = (PassThruCardService)card.getCardService( PassThruCardService.class, true );
-	} catch( Exception e ) {
-		System.out.println( e.getMessage() );
-	}
-
-	System.out.println("Applet selecting...");
-	if( !this.selectApplet() ) {
-		System.out.println( "Wrong card, no applet to select!\n" );
-		System.exit( 1 );
-		return;
-	} else
-		System.out.println( "Applet selected\n" );
-  mainLoop();
+	     System.out.println("Applet selecting...");
+	     if( !this.selectApplet() ) {
+		       System.out.println( "Wrong card, no applet to select!\n" );
+		       System.exit( 1 );
+		       return;
+	     } else
+		     System.out.println( "Applet selected\n" );
+         mainLoop();
 	//foo();
     }
 
@@ -172,7 +173,7 @@ public class TheClient {
 	    t[2] = P1_EMPTY;
 	    t[3] = P2_EMPTY;
 
-            this.sendAPDU(new CommandAPDU( t ));
+      this.sendAPDU(new CommandAPDU( t ));
     }
 
 
@@ -213,7 +214,7 @@ public class TheClient {
 	    return result;
     }
 
-    // 
+    //
     // private void foo() {
 	  //   sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 	  //   byte[] response;
@@ -246,8 +247,60 @@ public class TheClient {
     }
 
     void cipherFile(){
+    //  try{
+  			// System.out.println( "Veuillez entrer le nom de fichier a sauvegarder:" );
+  			// String filename = readKeyboard();
+        //
+  			// File file=null;
+  			// long fileLength=0;
+        //
+  			// file = new File(filename);
+  			// fileLength = file.length();
+        // FileInputStream inputstream = new FileInputStream(file);
+        //
+        // byte[] result = new byte[DATAMAXSIZE];
+        // int compteur = 0;
+        // int data = 0;
+        //
+        // while(((data = inputstream.read(result)) >= 0)&&data==DATAMAXSIZE ){
+
+          // byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
+          //
+          // int size_part = cmd_part.length;
+          // int totalLength =(int)DATAMAXSIZE+size_part;
+          // byte[] cmd_= new byte[totalLength+1];
+          //
+          // System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
+          // System.arraycopy(challenge, 0, cmd_, size_part, challenge.length);
+          // cmd_ [totalLength]=(byte)DATAMAXSIZE;
+          //
+          // CommandAPDU cmd1 = new CommandAPDU( cmd_ );
+          // ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+          //
+          // byte[] result1 =resp.getBytes();
+          // System.arraycopy(result1, 0, result, 0, challenge.length);
+          //
+          //
+          // System.out.println("nb of read : " + data + " - " + filecontent[0] + " - " + filecontent[1]);
+          //
+  				// byte[] cmd_part2 = {CLA, WRITEFILETOCARD, (byte)1, (byte)compteur, DATAMAXSIZE};
+          //
+  				// int sizecmd_part = cmd_part2.length;
+  				// totalLength =sizecmd_part+(int)DATAMAXSIZE;
+  				// byte[] cmd_5= new byte[totalLength];
+          //
+  				// System.arraycopy(cmd_part2, 0, cmd_5, 0, sizecmd_part);
+  				// System.arraycopy(filecontent, 0, cmd_5, sizecmd_part, (byte)filecontent.length);
+          //
+  				// CommandAPDU cmd1 = new CommandAPDU( cmd_5 );
+  				// this.sendAPDU( cmd1, DISPLAY );
+          //
+  				// compteur++;
+
+  		//	}
 
     }
+
     void exit() {
   		loop = false;
   	}
