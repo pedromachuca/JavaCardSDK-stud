@@ -125,8 +125,6 @@ public class TheApplet extends Applet {
 			Util.arrayCopy(tableFile,(byte)(tableFile[0]+3+(tableFile[(tableFile[0]+1)])*DATAMAXSIZE),buffer,(short)0,(byte)(tableFile[(tableFile[0]+2)]));
 			apdu.setOutgoingAndSend((short)0,(short)(tableFile[(tableFile[0]+2)]));
 		}
-		// Util.arrayCopy(tableFile,(byte)0,buffer,(short)0,(byte)100);
-		// apdu.setOutgoingAndSend((short)0,(short)100);
 	}
 
 	/*

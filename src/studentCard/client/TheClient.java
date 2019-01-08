@@ -201,7 +201,7 @@ public class TheClient {
 
 		byte[] cmd_1 = {CLA, READFILEFROMCARD, 1, P2, (byte)0x00};
 		CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
-		System.out.println("Sending blank command APDU, data expected...");
+		System.out.println("Sending APDU command with indice 1, data expected...");
 		ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
 		byte[] bytes1 = resp1.getBytes();
 		String msg1 = "";
@@ -211,7 +211,7 @@ public class TheClient {
 
 		byte[] cmd_2 = {CLA, READFILEFROMCARD, 2, P2, (byte)0x00};
 		CommandAPDU cmd2 = new CommandAPDU( cmd_2 );
-		System.out.println("Sending blank command APDU, data expected...");
+		System.out.println("Sending APDU command with indice 2 , data expected...");
 		ResponseAPDU resp2 = this.sendAPDU( cmd2, DISPLAY );
 		byte[] bytes2 = resp2.getBytes();
 		String msg2 = "";
@@ -283,7 +283,7 @@ public class TheClient {
 			int compteur = 0;
 			int data = 0;
 
-			while((data = inputstream.read(filecontent)) >= 0 ){//&& (int)(fileLength/DATAMAXSIZE)>compteur
+			while(((data = inputstream.read(filecontent)) >= 0)&&data==DATAMAXSIZE ){//&& (int)(fileLength/DATAMAXSIZE)>compteur
 
 				System.out.println("nb of read : " + data + " - " + filecontent[0] + " - " + filecontent[1]);
 
@@ -303,26 +303,23 @@ public class TheClient {
 
 			}
 			byte left =(byte)(fileLength%(long)DATAMAXSIZE);
-			byte [] contentLeft = new byte[(int)left];
 			byte[] cmd_part = {CLA, WRITEFILETOCARD, (byte)2, (byte)compteur, left};
 			int sizecmd_part = cmd_part.length;
+
 			if (left==0) {
-					totalLength =6;
+					totalLength =5;
 			}
 			else{
-					totalLength =5+(int)left;
+					 totalLength=5+(int)left;
 			}
 
 			byte[] cmd_4= new byte[totalLength];
 			System.out.println("Left :"+(int)left);
 
 			System.arraycopy(cmd_part, 0, cmd_4, 0, sizecmd_part1);
-			if (left==0) {
-				filecontent[0]=0;
+
+			if(left!=0){
 				System.arraycopy(filecontent, 0, cmd_4, sizecmd_part1, (byte)1);
-			}
-			else{
-					System.arraycopy(filecontent, 0, cmd_4, sizecmd_part1, (byte)left);
 			}
 			CommandAPDU cmd3 = new CommandAPDU( cmd_4 );
 			this.sendAPDU( cmd3, DISPLAY );
