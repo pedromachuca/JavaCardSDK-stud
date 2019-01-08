@@ -282,12 +282,7 @@ public class TheClient {
 			byte[] filecontent = new byte[2];
 			int compteur = 0;
 			int data = 0;
-			File toto = new File("file.txt");
-			FileInputStream test = new FileInputStream(toto);
-			byte [] tablo = new byte[2];
-			while(test.read(tablo) >=0){
-				System.out.println(" tablo : " +tablo[0]+" - "+tablo[1]);
-			}
+		
 			while((data = inputstream.read(filecontent)) >= 0 ){//&& (int)(fileLength/DATAMAXSIZE)>compteur
 
 				System.out.println("nb of read : " + data + " - " + filecontent[0] + " - " + filecontent[1]);
