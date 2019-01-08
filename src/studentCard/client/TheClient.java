@@ -282,7 +282,7 @@ public class TheClient {
 			byte[] filecontent = new byte[2];
 			int compteur = 0;
 			int data = 0;
-		
+
 			while((data = inputstream.read(filecontent)) >= 0 ){//&& (int)(fileLength/DATAMAXSIZE)>compteur
 
 				System.out.println("nb of read : " + data + " - " + filecontent[0] + " - " + filecontent[1]);
