@@ -15,16 +15,16 @@ public class TheClient {
 
 
     private final static byte CLA_TEST			           	= (byte)0x90;
-    private final static byte INS_TESTDES_ECB_NOPAD_ENC	= (byte)0x28;
-    private final static byte INS_TESTDES_ECB_NOPAD_DEC	= (byte)0x29;
-    private final static byte INS_DES_ECB_NOPAD_ENC    	= (byte)0x20;
-    private final static byte INS_DES_ECB_NOPAD_DEC    	= (byte)0x21;
+    // private final static byte INS_TESTDES_ECB_NOPAD_ENC	= (byte)0x28;
+    // private final static byte INS_TESTDES_ECB_NOPAD_DEC	= (byte)0x29;
+    // private final static byte INS_DES_ECB_NOPAD_ENC    	= (byte)0x20;
+    // private final static byte INS_DES_ECB_NOPAD_DEC    	= (byte)0x21;
     private final static byte P1_EMPTY                  = (byte)0x00;
     private final static byte P2_EMPTY                  = (byte)0x00;
     private static final byte CIPHERFILE		            = (byte)0x10;
     private static final byte UNCIPHERFILE		          = (byte)0x11;
     private static final byte CHANGEDESKEY		          = (byte)0x12;
-    static final byte DATAMAXSIZE                       = (short)0x02;
+    static final byte DATAMAXSIZE                       = (short)0x08;
 
 
     private PassThruCardService servClient = null;
@@ -155,87 +155,9 @@ public class TheClient {
 	     } else
 		     System.out.println( "Applet selected\n" );
          mainLoop();
-	//foo();
+	    //   foo();
     }
 
-
-    private void testDES_ECB_NOPAD( boolean displayAPDUs ) {
-	    testCryptoGeneric(INS_TESTDES_ECB_NOPAD_ENC);
-	    testCryptoGeneric(INS_TESTDES_ECB_NOPAD_DEC);
-    }
-
-
-    private void testCryptoGeneric( byte typeINS ) {
-	    byte[] t = new byte[4];
-
-	    t[0] = CLA_TEST;
-	    t[1] = typeINS;
-	    t[2] = P1_EMPTY;
-	    t[3] = P2_EMPTY;
-
-      this.sendAPDU(new CommandAPDU( t ));
-    }
-
-
-    private byte[] cipherDES_ECB_NOPAD( byte[] challenge, boolean display ) {
-	    return cipherGeneric( INS_DES_ECB_NOPAD_ENC, challenge );
-    }
-
-
-    private byte[] uncipherDES_ECB_NOPAD( byte[] challenge, boolean display ) {
-	    return cipherGeneric( INS_DES_ECB_NOPAD_DEC, challenge );
-    }
-
-
-    private byte[] cipherGeneric( byte typeINS, byte[] challenge ) {
-
-		  byte[] result = new byte[challenge.length];
-
-			byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)challenge.length};
-
-			int size_part = cmd_part.length;
-			int totalLength =challenge.length+size_part;
-			byte[] cmd_= new byte[totalLength+1];
-
-			System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
-			System.arraycopy(challenge, 0, cmd_, size_part, challenge.length);
-			cmd_ [totalLength]=(byte)challenge.length;
-
-			CommandAPDU cmd1 = new CommandAPDU( cmd_ );
-			ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
-
-			byte[] result1 =resp.getBytes();
-			System.arraycopy(result1, 0, result, 0, challenge.length);
-
-	    // TO COMPLETE
-			//forger un apdu de command avec INS set 1er parametre
-			//champ data set au 2eme parametre
-			//LC=LE
-	    return result;
-    }
-
-    //
-    // private void foo() {
-	  //   sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
-	  //   byte[] response;
-	  //   byte[] unciphered;
-	  //   long seed=0;
-	  //   java.util.Random r = new java.util.Random( seed );
-    //
-	  //   byte[] challengeDES = new byte[16]; 		// size%8==0, coz DES key 64bits
-    //
-	  //   r.nextBytes( challengeDES );
-    //
-	  //   System.out.println( "**TESTING**");
-	  //   testDES_ECB_NOPAD( true );
-	  //   System.out.println( "**TESTING**");
-    //
-	  //   System.out.println("\nchallenge:\n" + encoder.encode(challengeDES) + "\n");
-	  //   response = cipherGeneric(INS_DES_ECB_NOPAD_ENC, challengeDES);
-	  //   System.out.println("\nciphered is:\n" + encoder.encode(response) + "\n");
-	  //   unciphered = cipherGeneric(INS_DES_ECB_NOPAD_DEC, response);
-	  //   System.out.print("\nunciphered is:\n" + encoder.encode(unciphered) + "\n");
-    // }
 
     void changeDesKey(){
 
@@ -246,58 +168,70 @@ public class TheClient {
 
     }
 
-    void cipherFile(){
-    //  try{
-  			// System.out.println( "Veuillez entrer le nom de fichier a sauvegarder:" );
-  			// String filename = readKeyboard();
-        //
-  			// File file=null;
-  			// long fileLength=0;
-        //
-  			// file = new File(filename);
-  			// fileLength = file.length();
-        // FileInputStream inputstream = new FileInputStream(file);
-        //
-        // byte[] result = new byte[DATAMAXSIZE];
-        // int compteur = 0;
-        // int data = 0;
-        //
-        // while(((data = inputstream.read(result)) >= 0)&&data==DATAMAXSIZE ){
+    void cipherFile(byte typeINS){
+      sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 
-          // byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
-          //
-          // int size_part = cmd_part.length;
-          // int totalLength =(int)DATAMAXSIZE+size_part;
-          // byte[] cmd_= new byte[totalLength+1];
-          //
-          // System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
-          // System.arraycopy(challenge, 0, cmd_, size_part, challenge.length);
-          // cmd_ [totalLength]=(byte)DATAMAXSIZE;
-          //
-          // CommandAPDU cmd1 = new CommandAPDU( cmd_ );
-          // ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
-          //
-          // byte[] result1 =resp.getBytes();
-          // System.arraycopy(result1, 0, result, 0, challenge.length);
-          //
-          //
-          // System.out.println("nb of read : " + data + " - " + filecontent[0] + " - " + filecontent[1]);
-          //
-  				// byte[] cmd_part2 = {CLA, WRITEFILETOCARD, (byte)1, (byte)compteur, DATAMAXSIZE};
-          //
-  				// int sizecmd_part = cmd_part2.length;
-  				// totalLength =sizecmd_part+(int)DATAMAXSIZE;
-  				// byte[] cmd_5= new byte[totalLength];
-          //
-  				// System.arraycopy(cmd_part2, 0, cmd_5, 0, sizecmd_part);
-  				// System.arraycopy(filecontent, 0, cmd_5, sizecmd_part, (byte)filecontent.length);
-          //
-  				// CommandAPDU cmd1 = new CommandAPDU( cmd_5 );
-  				// this.sendAPDU( cmd1, DISPLAY );
-          //
-  				// compteur++;
+      try{
+  	     System.out.println( "Veuillez entrer le nom de fichier a chiffrer:" );
+  			 String filename = readKeyboard();
 
-  		//	}
+  			 File file=null;
+  			 long fileLength=0;
+
+  			 file = new File(filename);
+  			 fileLength = file.length();
+         FileInputStream inputstream = new FileInputStream(file);
+
+         byte[] result = new byte[DATAMAXSIZE];
+         int compteur = 0;
+         int data = 0;
+         String ciphered = "";
+         byte[] result2 = new byte [(int)fileLength];
+
+         while(((data = inputstream.read(result)) >= 0)&&data==DATAMAXSIZE ){
+
+           byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
+
+           int size_part = cmd_part.length;
+           int totalLength =(int)DATAMAXSIZE+size_part;
+           byte[] cmd_= new byte[totalLength+1];
+
+           System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
+           System.arraycopy(result, 0, cmd_, size_part, (int)DATAMAXSIZE);
+           cmd_ [totalLength]=(byte)DATAMAXSIZE;
+           System.out.println("nb of read : " + data + " - " + result[0] + " - " + result[1]);
+
+          CommandAPDU cmd1 = new CommandAPDU( cmd_ );
+          ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+
+          byte[] result1 =resp.getBytes();
+          // for(int i=0; i<result1.length;i++)
+          System.out.println("Test :"+ encoder.encode(result1));
+          System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
+          compteur+=2;
+
+  			}
+        for(int i=0; i<result2.length;i++)
+          ciphered += new StringBuffer("").append((char)result2[i]);
+
+        System.out.println("Ciphered :"+ciphered+"\n");
+        FileOutputStream fop = null;
+        File file1;
+        file1 = new File("ciphered.txt");
+        fop = new FileOutputStream(file1);
+
+        if (!file1.exists()) {
+          file1.createNewFile();
+        }
+
+        fop.write(result2);
+        fop.flush();
+        fop.close();
+      }catch(FileNotFoundException e){
+        System.out.println(e.getMessage());
+      }catch(IOException e){
+        System.out.println(e.getMessage());
+      }
 
     }
 
@@ -309,7 +243,7 @@ public class TheClient {
   		switch( choice ) {
   			case 3: changeDesKey(); break;
   			case 2: uncipherFile(); break;
-  			case 1: cipherFile(); break;
+  			case 1: cipherFile(CIPHERFILE); break;
   			case 0: exit(); break;
   			default: System.out.println( "unknown choice!" );
   		}

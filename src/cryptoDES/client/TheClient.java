@@ -196,7 +196,7 @@ public class TheClient {
 			System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
 			System.arraycopy(challenge, 0, cmd_, size_part, challenge.length);
 			cmd_ [totalLength]=(byte)challenge.length;
-			
+
 			CommandAPDU cmd1 = new CommandAPDU( cmd_ );
 			ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
 

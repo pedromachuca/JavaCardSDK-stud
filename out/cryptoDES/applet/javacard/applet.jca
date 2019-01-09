@@ -1,5 +1,5 @@
 // converted by version 1.3
-// on Wed Jan 09 19:17:11 CET 2019
+// on Wed Jan 09 18:57:04 CET 2019
 
 .package applet {
 	.aid 0xA0:0x0:0x0:0x0:0x62:0x3:0x1:0xC:0x6;
@@ -36,9 +36,7 @@
 		// 8
 		instanceFieldRef boolean TheApplet/DES_ECB_NOPAD;
 		// 9
-		staticMethodRef 2.13.0(BSZ)Ljavacard/security/Key;;		// javacard/security/KeyBuilder.buildKey(BSZ)Ljavacard/security/Key;
-			.descriptor	Ljavacard/security/Key;	2.0;
-
+		instanceFieldRef short TheApplet/i;
 		// 10
 		staticMethodRef 0.3.0()V;		// javacard/framework/Applet.<init>()V
 		// 11
@@ -72,24 +70,24 @@
 		// 23
 		staticMethodRef 0.7.1(S)V;		// javacard/framework/ISOException.throwIt(S)V
 		// 24
-		virtualMethodRef TheApplet/cipherFile(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V;
-			.descriptor	Ljavacard/framework/APDU;	0.10;
+		staticMethodRef TheApplet/testCipherGeneric(Ljavacardx/crypto/Cipher;SS)V;
 			.descriptor	Ljavacardx/crypto/Cipher;	1.1;
 
 		// 25
-		virtualMethodRef TheApplet/uncipherFile(Ljavacard/framework/APDU;)V;
+		staticMethodRef TheApplet/cipherGeneric(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V;
 			.descriptor	Ljavacard/framework/APDU;	0.10;
+			.descriptor	Ljavacardx/crypto/Cipher;	1.1;
 
 		// 26
-		virtualMethodRef TheApplet/changeDesKey(Ljavacard/framework/APDU;)V;
-			.descriptor	Ljavacard/framework/APDU;	0.10;
-
-		// 27
 		virtualMethodRef 0.10.6()S;		// javacard/framework/APDU.setIncomingAndReceive()S
-		// 28
+		// 27
 		virtualMethodRef 1.1.1([BSS[BS)S;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
-		// 29
+		// 28
 		virtualMethodRef 0.10.8(SS)V;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
+		// 29
+		staticMethodRef 2.13.0(BSZ)Ljavacard/security/Key;;		// javacard/security/KeyBuilder.buildKey(BSZ)Ljavacard/security/Key;
+			.descriptor	Ljavacard/security/Key;	2.0;
+
 	}
 
 	.class public TheApplet 0 extends 0.3 {		// extends javacard/framework/Applet
@@ -121,9 +119,10 @@
 			 boolean DES_ECB_NOPAD 23;		// Z
 			 boolean DES_CBC_NOPAD 24;		// Z
 			private static final byte CLA_TEST = -112;		// B
-			private static final byte CIPHERFILE = 16;		// B
-			private static final byte UNCIPHERFILE = 17;		// B
-			private static final byte CHANGEDESKEY = 18;		// B
+			private static final byte INS_DES_ECB_NOPAD_ENC = 32;		// B
+			private static final byte INS_DES_ECB_NOPAD_DEC = 33;		// B
+			private static final byte INS_TESTDES_ECB_NOPAD_ENC = 40;		// B
+			private static final byte INS_TESTDES_ECB_NOPAD_DEC = 41;		// B
 			static final byte[] theDESKey = {-54,-54,-54,-54,-54,-54,-54,-54};		// [B
 			private static final short DTRSIZE = 256;		// S
 			private static final short RANDOMSIZE = 1000;		// S
@@ -146,9 +145,6 @@
 		}
 
 		.packageMethodTable 0 {
-			changeDesKey(Ljavacard/framework/APDU;)V;
-			uncipherFile(Ljavacard/framework/APDU;)V;
-			cipherFile(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V;
 		}
 
 		.method protected <init>()V 0 {
@@ -242,7 +238,7 @@
 					sconst_3;
 					bspush 64;
 					sconst_0;
-					invokestatic 9;		// javacard/security/KeyBuilder.buildKey(BSZ)Ljavacard/security/Key;
+					invokestatic 29;		// javacard/security/KeyBuilder.buildKey(BSZ)Ljavacard/security/Key;
 					putfield_a 4;		// reference applet/TheApplet.secretDESKey
 					getfield_a_this 4;		// reference applet/TheApplet.secretDESKey
 					checkcast 0 11;		// T_CLASSORINTERFACE javacard/security/DESKey
@@ -338,53 +334,52 @@
 				L4:	aload_2;
 					sconst_1;
 					baload;
-					stableswitch L9 16 18 L5 L7 L8;
+					stableswitch L17 32 41 L11 L14 L17 L17 L17 L17 L17 L17 L5 L8;
 				L5:	getfield_b_this 8;		// boolean applet/TheApplet.DES_ECB_NOPAD
-					ifeq L10;
+					ifeq L7;
 				L6:	aload_0;
+					getfield_a_this 6;		// reference applet/TheApplet.cDES_ECB_NOPAD_enc
+					bspush 64;
+					bspush 100;
+					invokespecial 24;		// applet/TheApplet.testCipherGeneric(Ljavacardx/crypto/Cipher;SS)V
+				L7:	return;
+				L8:	getfield_b_this 8;		// boolean applet/TheApplet.DES_ECB_NOPAD
+					ifeq L10;
+				L9:	aload_0;
+					getfield_a_this 7;		// reference applet/TheApplet.cDES_ECB_NOPAD_dec
+					bspush 64;
+					bspush 100;
+					invokespecial 24;		// applet/TheApplet.testCipherGeneric(Ljavacardx/crypto/Cipher;SS)V
+				L10:	return;
+				L11:	getfield_b_this 8;		// boolean applet/TheApplet.DES_ECB_NOPAD
+					ifeq L13;
+				L12:	aload_0;
 					aload_1;
 					getfield_a_this 6;		// reference applet/TheApplet.cDES_ECB_NOPAD_enc
 					bspush 64;
-					invokevirtual 24;		// applet/TheApplet.cipherFile(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V
-					goto L10;
-				L7:	aload_0;
+					invokespecial 25;		// applet/TheApplet.cipherGeneric(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V
+				L13:	return;
+				L14:	getfield_b_this 8;		// boolean applet/TheApplet.DES_ECB_NOPAD
+					ifeq L16;
+				L15:	aload_0;
 					aload_1;
-					invokevirtual 25;		// applet/TheApplet.uncipherFile(Ljavacard/framework/APDU;)V
-					goto L10;
-				L8:	aload_0;
-					aload_1;
-					invokevirtual 26;		// applet/TheApplet.changeDesKey(Ljavacard/framework/APDU;)V
-					goto L10;
-				L9:	sspush 27904;
-					invokestatic 23;		// javacard/framework/ISOException.throwIt(S)V
-				L10:	goto L12;
-				L11:	astore_3;
-				L12:	return;
+					getfield_a_this 7;		// reference applet/TheApplet.cDES_ECB_NOPAD_dec
+					bspush 64;
+					invokespecial 25;		// applet/TheApplet.cipherGeneric(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V
+				L16:	return;
+				L17:	goto L19;
+				L18:	astore_3;
+				L19:	return;
 			.exceptionTable {
 				// start_block end_block handler_block catch_type_index
-				L4 L10 L11 18;
+				L4 L7 L18 18;
+				L8 L10 L18 18;
+				L11 L13 L18 18;
+				L14 L16 L18 18;
 			}
 		}
 
-		.method  changeDesKey(Ljavacard/framework/APDU;)V 128 {
-			.stack 0;
-			.locals 0;
-
-			.descriptor	Ljavacard/framework/APDU;	0.10;
-
-				L0:	return;
-		}
-
-		.method  uncipherFile(Ljavacard/framework/APDU;)V 129 {
-			.stack 0;
-			.locals 0;
-
-			.descriptor	Ljavacard/framework/APDU;	0.10;
-
-				L0:	return;
-		}
-
-		.method  cipherFile(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V 130 {
+		.method private cipherGeneric(Ljavacard/framework/APDU;Ljavacardx/crypto/Cipher;S)V {
 			.stack 6;
 			.locals 1;
 
@@ -392,7 +387,7 @@
 			.descriptor	Ljavacardx/crypto/Cipher;	1.1;
 
 				L0:	aload_1;
-					invokevirtual 27;		// javacard/framework/APDU.setIncomingAndReceive()S
+					invokevirtual 26;		// javacard/framework/APDU.setIncomingAndReceive()S
 					pop;
 					aload_1;
 					invokevirtual 21;		// javacard/framework/APDU.getBuffer()[B
@@ -405,15 +400,47 @@
 					baload;
 					aload 4;
 					sconst_5;
-					invokevirtual 28;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
+					invokevirtual 27;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
 					pop;
 					aload_1;
 					sconst_5;
 					aload 4;
 					sconst_4;
 					baload;
-					invokevirtual 29;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
+					invokevirtual 28;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
 					return;
+		}
+
+		.method private testCipherGeneric(Ljavacardx/crypto/Cipher;SS)V {
+			.stack 6;
+			.locals 0;
+
+			.descriptor	Ljavacardx/crypto/Cipher;	1.1;
+
+				L0:	aload_0;
+					sconst_0;
+					putfield_s 9;		// short applet/TheApplet.i
+				L1:	getfield_s_this 9;		// short applet/TheApplet.i
+					sload_3;
+					if_scmpge L3;
+				L2:	aload_1;
+					getfield_a_this 1;		// reference applet/TheApplet.dataToCipher
+					sconst_0;
+					sload_2;
+					bspush 8;
+					sdiv;
+					getfield_a_this 2;		// reference applet/TheApplet.ciphered
+					sconst_0;
+					invokevirtual 27;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
+					pop;
+					aload_0;
+					dup;
+					getfield_s 9;		// short applet/TheApplet.i
+					sconst_1;
+					sadd;
+					putfield_s 9;		// short applet/TheApplet.i
+					goto L1;
+				L3:	return;
 		}
 
 	}

@@ -17,10 +17,10 @@ public class TheApplet extends Applet {
     private final static byte CLA_TEST				= (byte)0x90;
 
 
-    private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
-    private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
-    private final static byte INS_TESTDES_ECB_NOPAD_ENC       	= (byte)0x28;
-    private final static byte INS_TESTDES_ECB_NOPAD_DEC       	= (byte)0x29;
+    // private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
+    // private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
+    // private final static byte INS_TESTDES_ECB_NOPAD_ENC       	= (byte)0x28;
+    // private final static byte INS_TESTDES_ECB_NOPAD_DEC       	= (byte)0x29;
     private static final byte CIPHERFILE		                    = (byte)0x10;
     private static final byte UNCIPHERFILE	                   	= (byte)0x11;
     private static final byte CHANGEDESKEY	                   	= (byte)0x12;
@@ -115,47 +115,27 @@ public class TheApplet extends Applet {
 	    new TheApplet();
     }
 
-
     public void process(APDU apdu) throws ISOException {
-        byte[] buffer = apdu.getBuffer();
 
-        if( selectingApplet() == true )
-          return ;
+      byte[] buffer = apdu.getBuffer();
 
-        if( buffer[ISO7816.OFFSET_CLA] != CLA_TEST )
-            ISOException.throwIt( ISO7816.SW_CLA_NOT_SUPPORTED );
+      if( selectingApplet() == true )
+        return ;
 
-        try { switch( buffer[ISO7816.OFFSET_INS] ) {
+      if( buffer[ISO7816.OFFSET_CLA] != CLA_TEST )
+          ISOException.throwIt( ISO7816.SW_CLA_NOT_SUPPORTED );
 
-        	case INS_TESTDES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
-        		testCipherGeneric( cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES, NBTESTSDESCIPHER  ); return;
-        	case INS_TESTDES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
-        		testCipherGeneric( cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES, NBTESTSDESUNCIPHER   ); return;
-
-        	case INS_DES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
-        		cipherGeneric( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); return;
-        	case INS_DES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
-        		cipherGeneric( apdu, cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES  ); return;
-        	    }
-        } catch( Exception e ) {}
+      try { switch( buffer[ISO7816.OFFSET_INS] )
+            {
+              case CIPHERFILE: if( DES_ECB_NOPAD )
+               cipherFile( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); break;
+              case UNCIPHERFILE: uncipherFile( apdu ); break;
+              case CHANGEDESKEY: changeDesKey( apdu ); break;
+              default: ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
+            }
+    	} catch( Exception e ) {}
     }
 
-    //SET INCOMMING AND RECEIVE !!! 		apdu.setIncomingAndReceive();
-	private void cipherGeneric( APDU apdu, Cipher cipher, short keyLength ) {
-    apdu.setIncomingAndReceive();
-		byte[] buffer = apdu.getBuffer();
-    cipher.doFinal( buffer, (short)5, (short)buffer[4], buffer, (short)5 );
-    apdu.setOutgoingAndSend((short)5,(short)buffer[4]);
-		// Write the method ciphering/unciphering data from the computer.
-		// The result is sent back to the computer.
-    //buffer[4] -> LC nbre d'octet a traiter
-	}
-
-
-	private void testCipherGeneric( Cipher cipher, short keyLength, short nbLoops ) {
-		for( i = 0; i < nbLoops; i++ )
-			cipher.doFinal( dataToCipher, (short)0, (short)(keyLength/8), ciphered, (short)0 );
-	}
 
   void changeDesKey(APDU apdu){
 
@@ -163,7 +143,7 @@ public class TheApplet extends Applet {
   }
 
   void uncipherFile(APDU apdu){
-
+    
   }
 
   void cipherFile(APDU apdu, Cipher cipher, short keyLength){
