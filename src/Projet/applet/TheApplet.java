@@ -139,7 +139,7 @@ public class TheApplet extends Applet {
 
 
   void changeDesKey(APDU apdu){
-
+    
 
   }
 

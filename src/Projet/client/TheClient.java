@@ -155,11 +155,20 @@ public class TheClient {
 	     } else
 		     System.out.println( "Applet selected\n" );
          mainLoop();
-	    //   foo();
     }
 
 
     void changeDesKey(){
+
+      System.out.println( "Veuillez entrer l'ancienne clef DES:" );
+      String StringDesKey = readKeyboard();
+      System.out.println( "Des key : "+StringDesKey);
+      //DES KEY TO CHANGE : 0xCA,0xCA,0xCA,0xCA,0xCA,0xCA,0xCA,0xCA
+
+      byte[] byteDesKey = StringDesKey.getBytes();
+      System.out.println( "Des key : "+HexString.hexify(byteDesKey));
+
+      //byte[] cmd_part = {CLA_TEST, CHANGEDESKEY, P1_EMPTY, P2_EMPTY, (byte)8};
 
 
     }
@@ -177,19 +186,27 @@ public class TheClient {
 
   			 File file=null;
   			 long fileLength=0;
-
+         int totalLength = 0;
   			 file = new File(filename);
   			 fileLength = file.length();
+         int leftpadding = (int)DATAMAXSIZE -((int)fileLength%DATAMAXSIZE);
+
+         if (typeINS==UNCIPHERFILE){
+           totalLength = (int)fileLength;
+         }
+         else{
+            totalLength =(int)fileLength+leftpadding;
+         }
          FileInputStream inputstream = new FileInputStream(file);
 
          byte[] result = new byte[DATAMAXSIZE];
          int compteur = 0;
          int data = 0;
          String ciphered = "";
-         int totalLength = 0;
-         byte[] result2 = new byte [(int)fileLength];
 
-         while(((data = inputstream.read(result)) >= 0)&&data==DATAMAXSIZE ){
+         byte[] result2 = new byte [totalLength];
+
+         while(((data = inputstream.read(result)) >= 0) ){
 
            byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
 
@@ -199,6 +216,17 @@ public class TheClient {
            byte[] cmd_= new byte[totalLength+1];
 
            System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
+           System.out.println("data "+data);
+           System.out.println("leftpadding "+leftpadding);
+
+           if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE) {
+             for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE ;i++ ) {
+                 result[i]=(byte)leftpadding;
+               }
+               for(int i=0; i<result.length;i++)
+                 System.out.println("padding "+HexString.hexify( result[i] ));
+           }
+
            System.arraycopy(result, 0, cmd_, size_part, (int)DATAMAXSIZE);
            cmd_ [totalLength]=(byte)DATAMAXSIZE;
 
@@ -206,46 +234,28 @@ public class TheClient {
           ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
 
           byte[] result1 =resp.getBytes();
-          System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
+          if (typeINS==UNCIPHERFILE){
+            leftpadding = (int)result1[result1.length-3];
+          }
+          System.arraycopy(result1, 0, result2, compteur, result1.length-2);
           compteur+=DATAMAXSIZE;
 
   			}
-        byte left =(byte)(fileLength%(long)DATAMAXSIZE);
-        byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
-        int sizecmd_part = cmd_part.length;
-        totalLength=sizecmd_part+(int)DATAMAXSIZE;
-        byte[] cmd_4= new byte[totalLength+1];
-        System.out.println("Left :"+(int)left);
-
-        System.arraycopy(cmd_part, 0, cmd_4, 0, sizecmd_part);
-        int padding = DATAMAXSIZE - (int)left;
-        for (int i=DATAMAXSIZE-padding;i<DATAMAXSIZE ;i++ ) {
-          result[i]=(byte)padding;
-          System.out.println("padding "+result[i]);
-        }
-
-        if(left!=0){
-          System.arraycopy(result, 0, cmd_4, sizecmd_part, DATAMAXSIZE);
-        }
-        cmd_4 [totalLength]=(byte)DATAMAXSIZE;
-
-        CommandAPDU cmd3 = new CommandAPDU( cmd_4 );
-        ResponseAPDU resp = this.sendAPDU( cmd3, DISPLAY );
-
-        byte[] result3 =resp.getBytes();
-
         inputstream.close();
 
-        for(int i=0; i<result2.length;i++)
-          ciphered += new StringBuffer("").append((char)result2[i]);
-
-        if(left!=0){
-          System.arraycopy(result3, 0, result2, compteur, DATAMAXSIZE-result3[result3.length]);
+        if (typeINS==UNCIPHERFILE) {
+          int uncipherlength = result2.length - leftpadding;
+          byte[] result4 = new byte [uncipherlength];
+          System.arraycopy(result2, 0, result4, 0, uncipherlength);
+          for(int i=0; i<result4.length;i++)
+            System.out.println("result4 "+HexString.hexify( result4[i] ));
+          writeOutputFile(result4, typeINS);
         }
 
-        System.out.println("Output :"+ciphered+"\n");
+        if (typeINS==CIPHERFILE) {
+          writeOutputFile(result2, typeINS);
+        }
 
-        writeOutputFile(result2, typeINS);
       }catch(FileNotFoundException e){
         System.out.println(e.getMessage());
       }catch(IOException e){
