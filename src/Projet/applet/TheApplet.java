@@ -24,7 +24,7 @@ public class TheApplet extends Applet {
     private static final byte CIPHERFILE		                    = (byte)0x10;
     private static final byte UNCIPHERFILE	                   	= (byte)0x11;
     private static final byte CHANGEDESKEY	                   	= (byte)0x12;
-
+    private boolean verify = false;
 
 	  static final byte[] theDESKey = new byte[] { (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA };
 
@@ -138,9 +138,27 @@ public class TheApplet extends Applet {
     }
 
 
-  void changeDesKey(APDU apdu){
-    
+    void changeDesKey(APDU apdu){
+      apdu.setIncomingAndReceive();
+      byte[] buffer = apdu.getBuffer();
 
+      if (buffer[2]==1) {
+        for (int i=0;i<buffer.length; i++ ) {
+          if (theDESKey[i]==buffer[i]) {
+            verify = true;
+          }
+          else{
+            verify = false;
+          }
+        }
+      }
+      if (buffer[2]==0&&verify==true) {
+        for (int i=0;i<buffer.length; i++ ) {
+          theDESKey[i]==buffer[i]
+        }
+      }
+    initKeyDES();
+    initDES_ECB_NOPAD();
   }
 
   void cipherFile(APDU apdu, Cipher cipher, short keyLength){
