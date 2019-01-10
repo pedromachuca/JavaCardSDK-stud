@@ -7,24 +7,16 @@ import opencard.core.terminal.*;
 import opencard.core.util.*;
 import opencard.opt.util.*;
 
-
-
-
 public class TheClient {
 
 
-
     private final static byte CLA_TEST			           	= (byte)0x90;
-    // private final static byte INS_TESTDES_ECB_NOPAD_ENC	= (byte)0x28;
-    // private final static byte INS_TESTDES_ECB_NOPAD_DEC	= (byte)0x29;
-    // private final static byte INS_DES_ECB_NOPAD_ENC    	= (byte)0x20;
-    // private final static byte INS_DES_ECB_NOPAD_DEC    	= (byte)0x21;
     private final static byte P1_EMPTY                  = (byte)0x00;
     private final static byte P2_EMPTY                  = (byte)0x00;
     private static final byte CIPHERFILE		            = (byte)0x10;
     private static final byte UNCIPHERFILE		          = (byte)0x11;
     private static final byte CHANGEDESKEY		          = (byte)0x12;
-    static final byte DATAMAXSIZE                       = (short)0x08;
+    private static final byte DATAMAXSIZE                       = (short)0x08;
 
 
     private PassThruCardService servClient = null;
@@ -80,11 +72,9 @@ public class TheClient {
 	    return result;
     }
 
-
     /************************************************
      * *********** BEGINNING OF TOOLS ***************
      * **********************************************/
-
 
     private String apdu2string( APDU apdu ) {
 	    return removeCR( HexString.hexify( apdu.getBytes() ) );
@@ -98,14 +88,13 @@ public class TheClient {
 
     public void displayAPDU( CommandAPDU termCmd, ResponseAPDU cardResp ) {
 	     System.out.println( "--> Term: " + removeCR( HexString.hexify( termCmd.getBytes() ) ) );
-	      System.out.println( "<-- Card: " + removeCR( HexString.hexify( cardResp.getBytes() ) ) );
+	     System.out.println( "<-- Card: " + removeCR( HexString.hexify( cardResp.getBytes() ) ) );
     }
 
 
     private String removeCR( String string ) {
 	    return string.replace( '\n', ' ' );
     }
-
 
     /******************************************
      * *********** END OF TOOLS ***************
@@ -114,15 +103,15 @@ public class TheClient {
 
     private boolean selectApplet() {
 	     boolean cardOk = false;
-	      try {
-	         CommandAPDU cmd = new CommandAPDU( new byte[] {
-                  (byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00, (byte)0x0A,
-		              (byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62,
-		              (byte)0x03, (byte)0x01, (byte)0x0C, (byte)0x06, (byte)0x01
-            } );
-            ResponseAPDU resp = this.sendAPDU( cmd );
-	          if( this.apdu2string( resp ).equals( "90 00" ) )
-		           cardOk = true;
+	     try {
+	        CommandAPDU cmd = new CommandAPDU( new byte[] {
+                (byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00, (byte)0x0A,
+		             (byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62,
+		             (byte)0x03, (byte)0x01, (byte)0x0C, (byte)0x06, (byte)0x01
+          } );
+          ResponseAPDU resp = this.sendAPDU( cmd );
+	        if( this.apdu2string( resp ).equals( "90 00" ) )
+		          cardOk = true;
 	      } catch(Exception e) {
             System.out.println( "Exception caught in selectApplet: " + e.getMessage() );
             java.lang.System.exit( -1 );
@@ -148,7 +137,8 @@ public class TheClient {
 	     }
 
 	     System.out.println("Applet selecting...");
-	     if( !this.selectApplet() ) {
+
+       if( !this.selectApplet() ) {
 		       System.out.println( "Wrong card, no applet to select!\n" );
 		       System.exit( 1 );
 		       return;
@@ -156,6 +146,7 @@ public class TheClient {
 		     System.out.println( "Applet selected\n" );
          mainLoop();
     }
+
     byte[] hexStringToByteArray(String s) {
       int len = s.length();
       byte[] data = new byte[len / 2];
@@ -252,15 +243,11 @@ public class TheClient {
            byte[] cmd_= new byte[totalLength+1];
 
            System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
-           // System.out.println("data "+data);
-           // System.out.println("leftpadding "+leftpadding);
 
            if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE) {
              for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE ;i++ ) {
                  result[i]=(byte)leftpadding;
                }
-               for(int i=0; i<result.length;i++)
-                 System.out.println("padding "+HexString.hexify( result[i] ));
            }
 
            System.arraycopy(result, 0, cmd_, size_part, (int)DATAMAXSIZE);
@@ -283,8 +270,6 @@ public class TheClient {
           int uncipherlength = result2.length - leftpadding;
           byte[] result4 = new byte [uncipherlength];
           System.arraycopy(result2, 0, result4, 0, uncipherlength);
-          for(int i=0; i<result4.length;i++)
-            System.out.println("result4 "+HexString.hexify( result4[i] ));
           writeOutputFile(result4, typeINS);
         }
 
@@ -299,6 +284,7 @@ public class TheClient {
       }
 
     }
+
     void writeOutputFile(byte [] result2, byte typeINS){
       try{
         FileOutputStream fop = null;
@@ -381,6 +367,5 @@ public class TheClient {
   			runAction( choice );
   		}
   	}
-
 
 }
