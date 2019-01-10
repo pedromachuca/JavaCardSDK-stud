@@ -164,15 +164,15 @@ public class TheClient {
 
     }
 
-    void uncipherFile(){
-
-    }
-
     void cipherFile(byte typeINS){
-      sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
 
       try{
-  	     System.out.println( "Veuillez entrer le nom de fichier a chiffrer:" );
+        if (typeINS==CIPHERFILE) {
+           System.out.println( "Veuillez entrer le nom de fichier a chiffrer:" );
+        }else{
+          System.out.println( "Veuillez entrer le nom de fichier a dechiffrer:" );
+        }
+
   			 String filename = readKeyboard();
 
   			 File file=null;
@@ -186,6 +186,7 @@ public class TheClient {
          int compteur = 0;
          int data = 0;
          String ciphered = "";
+         int totalLength = 0;
          byte[] result2 = new byte [(int)fileLength];
 
          while(((data = inputstream.read(result)) >= 0)&&data==DATAMAXSIZE ){
@@ -193,37 +194,79 @@ public class TheClient {
            byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
 
            int size_part = cmd_part.length;
-           int totalLength =(int)DATAMAXSIZE+size_part;
+
+           totalLength =(int)DATAMAXSIZE+size_part;
            byte[] cmd_= new byte[totalLength+1];
 
            System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
            System.arraycopy(result, 0, cmd_, size_part, (int)DATAMAXSIZE);
            cmd_ [totalLength]=(byte)DATAMAXSIZE;
-           System.out.println("nb of read : " + data + " - " + result[0] + " - " + result[1]);
 
           CommandAPDU cmd1 = new CommandAPDU( cmd_ );
           ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
 
           byte[] result1 =resp.getBytes();
-          // for(int i=0; i<result1.length;i++)
-          System.out.println("Test :"+ encoder.encode(result1));
           System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
-          compteur+=2;
+          compteur+=DATAMAXSIZE;
 
   			}
+        byte left =(byte)(fileLength%(long)DATAMAXSIZE);
+        byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
+        int sizecmd_part = cmd_part.length;
+        totalLength=sizecmd_part+(int)DATAMAXSIZE;
+        byte[] cmd_4= new byte[totalLength+1];
+        System.out.println("Left :"+(int)left);
+
+        System.arraycopy(cmd_part, 0, cmd_4, 0, sizecmd_part);
+        int padding = DATAMAXSIZE - (int)left;
+        for (int i=DATAMAXSIZE-padding;i<DATAMAXSIZE ;i++ ) {
+          result[i]=(byte)padding;
+          System.out.println("padding "+result[i]);
+        }
+
+        if(left!=0){
+          System.arraycopy(result, 0, cmd_4, sizecmd_part, DATAMAXSIZE);
+        }
+        cmd_4 [totalLength]=(byte)DATAMAXSIZE;
+
+        CommandAPDU cmd3 = new CommandAPDU( cmd_4 );
+        ResponseAPDU resp = this.sendAPDU( cmd3, DISPLAY );
+
+        byte[] result3 =resp.getBytes();
+
+        inputstream.close();
+
         for(int i=0; i<result2.length;i++)
           ciphered += new StringBuffer("").append((char)result2[i]);
 
-        System.out.println("Ciphered :"+ciphered+"\n");
+        if(left!=0){
+          System.arraycopy(result3, 0, result2, compteur, DATAMAXSIZE-result3[result3.length]);
+        }
+
+        System.out.println("Output :"+ciphered+"\n");
+
+        writeOutputFile(result2, typeINS);
+      }catch(FileNotFoundException e){
+        System.out.println(e.getMessage());
+      }catch(IOException e){
+        System.out.println(e.getMessage());
+      }
+
+    }
+    void writeOutputFile(byte [] result2, byte typeINS){
+      try{
         FileOutputStream fop = null;
         File file1;
-        file1 = new File("ciphered.txt");
+        if (typeINS==CIPHERFILE) {
+            file1 = new File("ciphered.txt");
+        }else{
+            file1 = new File("unciphered.txt");
+        }
         fop = new FileOutputStream(file1);
 
         if (!file1.exists()) {
           file1.createNewFile();
         }
-
         fop.write(result2);
         fop.flush();
         fop.close();
@@ -232,7 +275,6 @@ public class TheClient {
       }catch(IOException e){
         System.out.println(e.getMessage());
       }
-
     }
 
     void exit() {
@@ -242,7 +284,7 @@ public class TheClient {
   	void runAction( int choice ) {
   		switch( choice ) {
   			case 3: changeDesKey(); break;
-  			case 2: uncipherFile(); break;
+  			case 2: cipherFile(UNCIPHERFILE); break;
   			case 1: cipherFile(CIPHERFILE); break;
   			case 0: exit(); break;
   			default: System.out.println( "unknown choice!" );

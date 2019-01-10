@@ -129,7 +129,8 @@ public class TheApplet extends Applet {
             {
               case CIPHERFILE: if( DES_ECB_NOPAD )
                cipherFile( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); break;
-              case UNCIPHERFILE: uncipherFile( apdu ); break;
+              case UNCIPHERFILE: if( DES_ECB_NOPAD )
+                cipherFile( apdu,  cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES ); break;
               case CHANGEDESKEY: changeDesKey( apdu ); break;
               default: ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
             }
@@ -140,10 +141,6 @@ public class TheApplet extends Applet {
   void changeDesKey(APDU apdu){
 
 
-  }
-
-  void uncipherFile(APDU apdu){
-    
   }
 
   void cipherFile(APDU apdu, Cipher cipher, short keyLength){
