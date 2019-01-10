@@ -156,20 +156,56 @@ public class TheClient {
 		     System.out.println( "Applet selected\n" );
          mainLoop();
     }
-
+    byte[] hexStringToByteArray(String s) {
+      int len = s.length();
+      byte[] data = new byte[len / 2];
+      for (int i = 0; i < len; i += 2) {
+          data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                               + Character.digit(s.charAt(i+1), 16));
+      }
+      return data;
+    }
 
     void changeDesKey(){
 
       System.out.println( "Veuillez entrer l'ancienne clef DES:" );
       String StringDesKey = readKeyboard();
-      System.out.println( "Des key : "+StringDesKey);
+      byte[] byteDesKey =hexStringToByteArray(StringDesKey);
       //DES KEY TO CHANGE : 0xCA,0xCA,0xCA,0xCA,0xCA,0xCA,0xCA,0xCA
 
-      byte[] byteDesKey = StringDesKey.getBytes();
-      System.out.println( "Des key : "+HexString.hexify(byteDesKey));
+      byte[] cmd_part = {CLA_TEST, CHANGEDESKEY, 1, P2_EMPTY, (byte)8};
+      int size_part = cmd_part.length;
 
-      //byte[] cmd_part = {CLA_TEST, CHANGEDESKEY, P1_EMPTY, P2_EMPTY, (byte)8};
+      int totalLength =8+size_part;
+      byte[] cmd_= new byte[totalLength+1];
 
+      System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
+      System.arraycopy(byteDesKey, 0, cmd_, size_part, 8);
+      cmd_ [totalLength]=1;
+      CommandAPDU cmd1 = new CommandAPDU( cmd_ );
+      ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+
+      byte[] result =resp.getBytes();
+
+      if (result[0]==1){
+        System.out.println( "La clef est verifie, veuillez entrer la nouvelle clef DES:" );
+        String StringNewDesKey = readKeyboard();
+        byte[] byteNewDesKey =hexStringToByteArray(StringNewDesKey);
+
+        byte[] cmd_part1 = {CLA_TEST, CHANGEDESKEY, 0, P2_EMPTY, (byte)8};
+        int size_part1 = cmd_part1.length;
+
+        int totalLength1 =8+size_part1;
+        byte[] cmd_1= new byte[totalLength1];
+
+        System.arraycopy(cmd_part1, 0, cmd_1, 0, size_part1);
+        System.arraycopy(byteNewDesKey, 0, cmd_1, size_part1, 8);
+        CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
+        this.sendAPDU( cmd2, DISPLAY );
+      }
+      else{
+        System.out.println( "Mauvaise clef !!" );
+      }
 
     }
 
@@ -216,8 +252,8 @@ public class TheClient {
            byte[] cmd_= new byte[totalLength+1];
 
            System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
-           System.out.println("data "+data);
-           System.out.println("leftpadding "+leftpadding);
+           // System.out.println("data "+data);
+           // System.out.println("leftpadding "+leftpadding);
 
            if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE) {
              for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE ;i++ ) {
