@@ -35,9 +35,9 @@ public class TheApplet extends Applet {
     private Key secretDESKey, secretDES2Key, secretDES3Key;
 
     // "Foo" (name, also sent after termining an operation)
-    private byte[] name = { (byte)0x03, (byte)0x46, (byte)0x6F, (byte)0x6F };
+    // private byte[] name = { (byte)0x03, (byte)0x46, (byte)0x6F, (byte)0x6F };
     // data's size
-    private final static short DTRSIZE = (short)256;//256bytes==2048bits//FOO 8160;//mqos.jpg is 100x20, so...
+    // private final static short DTRSIZE = (short)256;//256bytes==2048bits//FOO 8160;//mqos.jpg is 100x20, so...
     // loop variable
     private short i, j, k, x, y;
     // read/write tests array size
@@ -153,7 +153,7 @@ public class TheApplet extends Applet {
           }
       }
       if (buffer[2]==0&&verify==true) {
-        Util.arrayCopy(buffer,(byte)0,theDESKey,(short)0,(byte)8);
+        Util.arrayCopy(buffer,(byte)5,theDESKey,(short)0,(byte)8);
       }
     initKeyDES();
     initDES_ECB_NOPAD();
