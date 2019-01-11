@@ -16,7 +16,7 @@ public class TheClient {
     private static final byte CIPHERFILE		            = (byte)0x10;
     private static final byte UNCIPHERFILE		          = (byte)0x11;
     private static final byte CHANGEDESKEY		          = (byte)0x12;
-    private static final byte DATAMAXSIZE                       = (short)0x08;
+    private static final int DATAMAXSIZE               = 248;
 
 
     private PassThruCardService servClient = null;
@@ -187,8 +187,8 @@ public class TheClient {
         int size_part1 = cmd_part1.length;
 
         int totalLength1 =8+size_part1;
-        byte[] cmd_1= new byte[totalLength1];
-
+        byte[] cmd_1= new byte[totalLength1+1];
+        cmd_1[totalLength] = (byte)1;
         System.arraycopy(cmd_part1, 0, cmd_1, 0, size_part1);
         System.arraycopy(byteNewDesKey, 0, cmd_1, size_part1, 8);
         CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
@@ -222,11 +222,11 @@ public class TheClient {
            totalLength = (int)fileLength;
          }
          else{
-            totalLength =(int)fileLength+leftpadding;
+            totalLength =(int)fileLength+(int)leftpadding;
          }
          FileInputStream inputstream = new FileInputStream(file);
 
-         byte[] result = new byte[DATAMAXSIZE];
+         byte[] result = new byte[(int)DATAMAXSIZE];
          int compteur = 0;
          int data = 0;
          String ciphered = "";
@@ -239,18 +239,18 @@ public class TheClient {
 
            int size_part = cmd_part.length;
 
-           totalLength =(int)DATAMAXSIZE+size_part;
+           totalLength =DATAMAXSIZE+size_part;
            byte[] cmd_= new byte[totalLength+1];
 
            System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
 
-           if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE) {
-             for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE ;i++ ) {
+           if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE){
+             for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
                  result[i]=(byte)leftpadding;
                }
            }
 
-           System.arraycopy(result, 0, cmd_, size_part, (int)DATAMAXSIZE);
+           System.arraycopy(result, 0, cmd_, size_part, DATAMAXSIZE);
            cmd_ [totalLength]=(byte)DATAMAXSIZE;
 
           CommandAPDU cmd1 = new CommandAPDU( cmd_ );
@@ -258,19 +258,24 @@ public class TheClient {
 
           byte[] result1 =resp.getBytes();
           if (typeINS==UNCIPHERFILE){
-            leftpadding = (int)result1[result1.length-3];
+            leftpadding = (int)(result1[result1.length-3]&0xff);
           }
           System.arraycopy(result1, 0, result2, compteur, result1.length-2);
           compteur+=DATAMAXSIZE;
-
   			}
+
         inputstream.close();
 
         if (typeINS==UNCIPHERFILE) {
-          int uncipherlength = result2.length - leftpadding;
-          byte[] result4 = new byte [uncipherlength];
-          System.arraycopy(result2, 0, result4, 0, uncipherlength);
-          writeOutputFile(result4, typeINS);
+          if (leftpadding>0) {
+            int uncipherlength = result2.length - leftpadding;
+            byte[] result4 = new byte [uncipherlength];
+            System.arraycopy(result2, 0, result4, 0, uncipherlength);
+            writeOutputFile(result4, typeINS);
+          }
+          else{
+            System.out.println("Wrong key to decipher");
+          }
         }
 
         if (typeINS==CIPHERFILE) {

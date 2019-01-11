@@ -90,11 +90,10 @@ public class TheApplet extends Applet {
     void changeDesKey(APDU apdu){
       apdu.setIncomingAndReceive();
       byte[] buffer = apdu.getBuffer();
-      byte[] verif ={0x01};
       if (buffer[2]==1) {
           if (Util.arrayCompare(theDESKey,(short)0, buffer,(short)5, (short)8) == 0) {
             verify = true;
-            Util.arrayCopy(verif,(byte)0,buffer,(short)0,(byte)1);
+            buffer[0] = (byte)1;
             apdu.setOutgoingAndSend((short)0,(short)1);
           }
           else{
@@ -102,17 +101,23 @@ public class TheApplet extends Applet {
           }
       }
       if (buffer[2]==0&&verify==true) {
+        ((DESKey)secretDESKey).clearKey();
         Util.arrayCopy(buffer,(byte)5,theDESKey,(short)0,(byte)8);
+        initKeyDES();
+        initDES_ECB_NOPAD();
+        buffer[0] = (byte)1;
+        apdu.setOutgoingAndSend((short)0,(short)1);
       }
-    initKeyDES();
-    initDES_ECB_NOPAD();
+
   }
 
   void cipherFile(APDU apdu, Cipher cipher, short keyLength){
     apdu.setIncomingAndReceive();
     byte[] buffer = apdu.getBuffer();
-    cipher.doFinal( buffer, (short)5, (short)buffer[4], buffer, (short)5 );
-    apdu.setOutgoingAndSend((short)5,(short)buffer[4]);
+    short bigData = (short)(buffer[4]&0xff);
+    //buffer[buffer[4]+5] =(buffer[4]&0xff);
+    cipher.doFinal( buffer, (short)5, (short)bigData, buffer, (short)5 );
+    apdu.setOutgoingAndSend((short)5,(short)bigData);
   }
 
 }
