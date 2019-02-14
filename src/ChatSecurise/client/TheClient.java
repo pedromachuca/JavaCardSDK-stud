@@ -1,8 +1,14 @@
+package client;
+
 import java.net.*;
 import java.io.*;
+import java.util.Date;
+import opencard.core.service.*;
+import opencard.core.terminal.*;
+import opencard.core.util.*;
+import opencard.opt.util.*;
 
-
-public class ClientChat extends Thread{
+public class TheClient extends Thread{
 
   BufferedReader resVersConsoleInput;
   BufferedReader consoleVersResInput;
@@ -29,7 +35,7 @@ public class ClientChat extends Thread{
       Socket socket;
       socket = new Socket(ip, port);
 
-      new ClientChat(socket);
+      new TheClient(socket);
 
     }catch( IOException e ) {
         System.out.println( "Probleme de connexion" );
@@ -37,7 +43,7 @@ public class ClientChat extends Thread{
   }
 
 
-  public ClientChat(Socket socket){
+  public TheClient(Socket socket){
 
     this.socket = socket;
     if (initStreams()) {
