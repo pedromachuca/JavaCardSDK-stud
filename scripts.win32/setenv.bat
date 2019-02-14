@@ -1,4 +1,4 @@
-set PROJECT=Projet
+set PROJECT=ChatSecurise
 
 set DIR=..
 set OUT=%DIR%\out
