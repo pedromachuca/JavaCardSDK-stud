@@ -31,8 +31,8 @@ public class TheClient extends Thread{
   Socket socket;
   boolean loop = true;
 
-  byte [] modulus = new byte[255];
-  byte [] exponent = new byte[4];
+  byte [] modulus = new byte[128];
+  byte [] exponent = new byte[3];
 
   private final static byte CLA                    = (byte)0x90;
   private final static byte INS_GET_PUBLIC_RSA_KEY = (byte)0xFE;
@@ -83,10 +83,17 @@ public class TheClient extends Thread{
         while(loop){
           message = consoleVersResInput.readLine();
           consoleVersResOutput.println(message);
+          if (message.equals("/quit")) {
+              consoleVersResInput.close();
+              consoleVersResOutput.close();
+              loop =false;
+              java.lang.System.exit(0) ;
+          }
         }
       SmartCard.shutdown();
       }catch( IOException e ) {
-        System.out.println( "Probleme de lecture" );
+        java.lang.System.exit(0) ;
+
       }
     }
     else{
@@ -189,29 +196,28 @@ public class TheClient extends Thread{
     	} else
     		System.out.println( "Applet selected\n" );
 
-    	// authentification();
     }
 
-   public boolean authentification(){
+   public boolean sendPubKey(){
 
      byte[] cmd_ = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x00, (byte)0x00};
      CommandAPDU cmd = new CommandAPDU( cmd_ );
      System.out.println("Modulus expected...Avec 0x00");
      ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
-     modulus = resp.getBytes();
+     byte[] tmpmodulus = resp.getBytes();
+     System.arraycopy(tmpmodulus, 1, modulus, 0, 128);
+
 
      byte[] cmd_1 = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x01, (byte)0x00};
      CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
      System.out.println("Exponent expected... Avec 0x01");
      ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
-     exponent = resp.getBytes();
+     byte[] tmpexponent = resp1.getBytes();
+
+     System.arraycopy(tmpexponent, 1, exponent, 0, 3);
+
      String pubkey = generatePub();
-     // try{
-     //   sleep(10);
-     // }catch(Exception InterruptedException){
-     //   System.out.println("Sleep exepction");
-     // }
-      consoleVersResOutput.println(pubkey);
+     consoleVersResOutput.println(pubkey);
 
      return true;
    }
@@ -237,32 +243,43 @@ public class TheClient extends Thread{
        KeyFactory factory = KeyFactory.getInstance( "RSA" );
        PublicKey pub = factory.generatePublic(publicSpec);
        byte[] encodedPublicKey = pub.getEncoded();
+
+
        BASE64Encoder encoder = new BASE64Encoder();
        b64PublicKey = encoder.encode(encodedPublicKey).replaceAll(System.getProperty("line.separator"),"");
-       System.out.println("Public key : "+b64PublicKey);
 
-     }catch(Exception NoSuchAlgorithmException){
-       System.out.println( "no such algo" );
+     }catch(Exception e){
+       System.out.println( "no such algo"+e );
      }
      return b64PublicKey;
    }
 
-   public void nameOk(){
+   public void sendChall(){
+      System.out.println("INSIDE sendChall");
+      String encodedString = resVersConsoleInput.readLine();
+   }
+   public String cmd(){
 
-     // String message ="";
-     // try{
-     //   message = resVersConsoleInput.readLine();
-     //   while(!message.equals("OK")){
-     //     message = resVersConsoleInput.readLine();
-     //   }
-     // }catch(Exception IOException){
-     //   System.out.println("nameok");
-     // }
+     String message ="";
      try{
-       consoleVersResInput.readLine();
-     }catch( IOException e ){
-       System.out.println( "Probleme d'initialisation des streams" );
+          message = resVersConsoleInput.readLine();
+          System.out.println(message);
+          message = consoleVersResInput.readLine();
+          consoleVersResOutput.println(message);
+          message = resVersConsoleInput.readLine();
+
+          if(message.equals("ok")){
+            return "ok";
+          }
+          if (message.equals("chall")) {
+            return "chall";
+          }
+
+
+     }catch(Exception IOException){
+       System.out.println("nameok");
      }
+     return "";
    }
 
   public boolean initStreams(){
@@ -281,8 +298,17 @@ public class TheClient extends Thread{
   }
 
   public void mainLoop(){
-    nameOk();
-    authentification();
+    while(true){
+      String cmd = cmd();
+      if (cmd.equals("ok")){
+        sendPubKey();
+        break;
+      }
+      if (cmd.equals("chall")) {
+        sendChall();
+        break;
+      }
+    }
   }
 
   public void run(){
@@ -293,7 +319,8 @@ public class TheClient extends Thread{
         resVersConsoleOutput.println(message);
       }
     }catch( IOException e ) {
-        System.out.println( "Probleme de lecture" );
+      java.lang.System.exit(0) ;
+      System.out.println("test :"+e);
     }
   }
 
