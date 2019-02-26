@@ -50,14 +50,14 @@ public class TheClient {
 	public TheClient() {
 		try {
 			SmartCard.start();
-			System.out.print( "Smartcard inserted?... " ); 
-			CardRequest cr = new CardRequest (CardRequest.ANYCARD,null,null); 
+			System.out.print( "Smartcard inserted?... " );
+			CardRequest cr = new CardRequest (CardRequest.ANYCARD,null,null);
 			SmartCard sm = SmartCard.waitForCard (cr);
 			if (sm != null) {
 				System.out.println ("got a SmartCard object!\n");
 			} else
 				System.out.println( "did not get a SmartCard object!\n" );
-			initNewCard( sm ); 
+			initNewCard( sm );
 			SmartCard.shutdown();
 		} catch( Exception e ) {
 			System.out.println( "TheClient error: " + e.getMessage() );
@@ -121,7 +121,7 @@ public class TheClient {
 		try {
 			CommandAPDU cmd = new CommandAPDU( new byte[] {
 				(byte)0x00, (byte)0xA4, (byte)0x04, (byte)0x00, (byte)0x0A,
-				    (byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62, 
+				    (byte)0xA0, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x62,
 				    (byte)0x03, (byte)0x01, (byte)0x0C, (byte)0x06, (byte)0x01
 			} );
 			ResponseAPDU resp = sendAPDU( cmd );
@@ -157,7 +157,7 @@ public class TheClient {
 			System.out.println( "Wrong card, no applet to select!\n" );
 			System.exit( 1 );
 			return;
-		} else 
+		} else
 			System.out.println( "Applet selected\n" );
 
 		try {
@@ -176,10 +176,10 @@ public class TheClient {
 		byte[] apdu = new byte[headers.length+0];
 		System.arraycopy( headers, 0, apdu, 0, headers.length );
 		sendAPDU(new CommandAPDU( apdu ));
-	} 
+	}
 
 
-	private void testDES( boolean displayAPDUs ) { 
+	private void testDES( boolean displayAPDUs ) {
 		System.out.println( "**TESTING DES_CARD**");
 		testProcessingDES(INS_TESTDES_ECB_NOPAD_ENC);
 		testProcessingDES(INS_TESTDES_ECB_NOPAD_DEC);
@@ -207,12 +207,12 @@ public class TheClient {
 
 	private byte[] crypt( byte[] challenge ) {
 		return processingDES( INS_RSA_ENC, challenge );
-	} 
+	}
 
 
 	private byte[] uncrypt( byte[] challenge ) {
 		return processingDES( INS_RSA_DEC, challenge );
-	} 
+	}
 
 
 	private void mainContent() throws Exception {
@@ -299,7 +299,7 @@ public class TheClient {
 		byte[] challengeBytes = new byte[DATASIZE];
 		r.nextBytes( challengeBytes );
 		System.out.println("challenge:\n" + encoder.encode( challengeBytes ) + "\n" );
-		
+
 		// Crypt with public key (step 3)
 		cRSA_NO_PAD.init( Cipher.ENCRYPT_MODE, pub );
 		byte[] ciphered = new byte[DATASIZE];

@@ -11,12 +11,13 @@ public class ServiceChat extends Thread{
   PrintStream output;
   Socket socket;
   static List<String> listUser= new ArrayList<>(NBMAXUSER);
-  static List<String> listPassword= new ArrayList<>(NBMAXUSER);
+  // static List<String> listPassword= new ArrayList<>(NBMAXUSER);
   HashMap<String, PrintStream> database = new HashMap<String, PrintStream>();
   static List<String> connectedUser= new ArrayList<>(NBMAXUSER);
 
   String username;
-  String password;
+  String pubkey;
+  // String password;
 
   public ServiceChat( Socket socket ) {
       this.socket = socket;
@@ -44,13 +45,46 @@ public class ServiceChat extends Thread{
     }
     return askedInput;
   }
+  // public boolean authentification(){
+  //
+  //     boolean auth =true;
+  //     int resSearch=0;
+  //     output.println("Veuillez entrer un nom d'utilisateur : ");
+  //     username = askInput();
+  //
+  //     while(search(connectedUser, username)>=0){
+  //       output.println("Le nom d'utilisateur existe deja reessayer : ");
+  //       username = askInput();
+  //     }
+  //     connectedUser.add(username);
+  //
+  //     resSearch=search(listUser, username);
+  //     if (resSearch>=0) {
+  //       output.println("Veuillez entrer votre mot de passe: ");
+  //       password= askInput();
+  //       while(!(listPassword.get(resSearch).equals(password))) {
+  //         output.println("Mauvais mot de passe reessayer: ");
+  //         password=askInput();
+  //         auth=true;
+  //       }
+  //     }
+  //     else{
+  //       listUser.add(username);
+  //       output.println("It is your first inscription please enter a password :");
+  //       password= askInput();
+  //       listPassword.add(password);
+  //       auth=true;
+  //     }
+  //   return auth;
+  //   }
+
   public boolean authentification(){
 
       boolean auth =true;
       int resSearch=0;
       output.println("Veuillez entrer un nom d'utilisateur : ");
       username = askInput();
-
+      output.println("OK");
       while(search(connectedUser, username)>=0){
         output.println("Le nom d'utilisateur existe deja reessayer : ");
         username = askInput();
@@ -59,19 +93,18 @@ public class ServiceChat extends Thread{
 
       resSearch=search(listUser, username);
       if (resSearch>=0) {
-        output.println("Veuillez entrer votre mot de passe: ");
-        password= askInput();
-        while(!(listPassword.get(resSearch).equals(password))) {
-          output.println("Mauvais mot de passe reessayer: ");
-          password=askInput();
-          auth=true;
-        }
+        // output.println("Veuillez entrer votre mot de passe: ");
+        // password= askInput();
+        // while(!(listPassword.get(resSearch).equals(password))) {
+        //   output.println("Mauvais mot de passe reessayer: ");
+        //   password=askInput();
+        //   auth=true;
+        // }
       }
       else{
+        output.println("First inscription waiting for the RSA public key ...");
+        rcvRsaPubKey();
         listUser.add(username);
-        output.println("It is your first inscription please enter a password :");
-        password= askInput();
-        listPassword.add(password);
         auth=true;
       }
     return auth;
@@ -117,8 +150,9 @@ public class ServiceChat extends Thread{
   }
   public void sendMsg(String[] message){
     PrintStream usertosend;
+    System.out.println(" message "+message.length);
     usertosend = database.get(message[1]);
-    usertosend.print(username+" : ");
+    usertosend.print(username+" : "+message[1]);
 
     for (int i=2;i<message.length;i++) {
         usertosend.print(" "+message[i]);
@@ -141,6 +175,14 @@ public class ServiceChat extends Thread{
     }
   }
 
+  public void rcvRsaPubKey(){
+    try{
+        pubkey = input.readLine();
+    }catch(IOException e){
+      System.out.println("Inside RCV RSA PUB KEY");
+    }
+  }
+
   public void help(){
     output.println("Liste des commandes disponibles :\n/list : donne la liste de utilisateurs\n/quit : permet de quitter le chat\n/sendMsg <user> <msg> : pour envoyer un message prive");
     output.println("/sendFile <user> <fileName> : pour envoyer un fichier en prive\n/help : pour afficher la liste des commandes\n/? : pour afficher la liste des commandes");
@@ -152,7 +194,7 @@ public class ServiceChat extends Thread{
     System.out.println(database);
   }
   public void parseMsg(String message){
-    String[] messageSplit = new String[100];
+    String[] messageSplit = new String[300];
     messageSplit = message.split(" ");
 
     if(message.startsWith("/")){

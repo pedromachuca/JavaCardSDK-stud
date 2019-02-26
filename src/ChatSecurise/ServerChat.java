@@ -10,8 +10,9 @@ class ServerChat {
           ServerSocket serversocket = new ServerSocket(1234);
 
           while (true){
-
+              System.out.println( "Listenning 1234 ..." );
               new ServiceChat(serversocket.accept());
+              System.out.println( "New client connected !" );
           }
         } catch( IOException e ) {
           System.out.println( "probleme de connexion" );

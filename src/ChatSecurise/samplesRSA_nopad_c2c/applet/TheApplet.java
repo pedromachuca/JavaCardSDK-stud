@@ -1,17 +1,10 @@
 package applet;
 
-
-
-
 import javacard.framework.*;
 import javacard.security.*;
 import javacardx.crypto.*;
 
-
-
-
 public class TheApplet extends Applet {
-
 
 	private final static byte CLA_TEST                    = (byte)0x90;
 	private final static byte INS_GENERATE_RSA_KEY        = (byte)0xF6;
@@ -28,9 +21,6 @@ public class TheApplet extends Applet {
 
 	// cipher key length
 	private short cipherRSAKeyLength;
-
-
-
 
 	// RSA Keys section
 
@@ -180,8 +170,6 @@ public class TheApplet extends Applet {
 	};
 
 
-
-
 	protected TheApplet() {
 		publicRSAKey = privateRSAKey = null;
 		cRSA_NO_PAD = null;
@@ -229,26 +217,26 @@ public class TheApplet extends Applet {
 	}
 
 
-	void generateRSAKey() {
-		keyPair = new KeyPair(KeyPair.ALG_RSA, (short)publicRSAKey.getSize());
-		keyPair.genKeyPair();
-		publicRSAKey = keyPair.getPublic();
-		privateRSAKey = keyPair.getPrivate();
-	}
+	// void generateRSAKey() {
+	// 	keyPair = new KeyPair(KeyPair.ALG_RSA, (short)publicRSAKey.getSize());
+	// 	keyPair.genKeyPair();
+	// 	publicRSAKey = keyPair.getPublic();
+	// 	privateRSAKey = keyPair.getPrivate();
+	// }
 
 
 	// RSA Encrypt (with public key)
-	void RSAEncrypt(APDU apdu) {
-		byte[] buffer = apdu.getBuffer();
-		// initialize the algorithm with default key
-		cRSA_NO_PAD.init(publicRSAKey, Cipher.MODE_ENCRYPT);
-		// compute internel test
-		cRSA_NO_PAD.doFinal(inC, (short)0, (short)(cipherRSAKeyLength/8), buffer, (short)1);
-		// compare result with the patern
-		buffer[0] = Util.arrayCompare(buffer, (short)1, cRSAPublicEncResult, (short)0, (short)(cipherRSAKeyLength/8));
-		// send difference
-		apdu.setOutgoingAndSend((short)0, (short)1);
-	}
+	// void RSAEncrypt(APDU apdu) {
+	// 	byte[] buffer = apdu.getBuffer();
+	// 	// initialize the algorithm with default key
+	// 	cRSA_NO_PAD.init(publicRSAKey, Cipher.MODE_ENCRYPT);
+	// 	// compute internel test
+	// 	cRSA_NO_PAD.doFinal(inC, (short)0, (short)(cipherRSAKeyLength/8), buffer, (short)1);
+	// 	// compare result with the patern
+	// 	buffer[0] = Util.arrayCompare(buffer, (short)1, cRSAPublicEncResult, (short)0, (short)(cipherRSAKeyLength/8));
+	// 	// send difference
+	// 	apdu.setOutgoingAndSend((short)0, (short)1);
+	// }
 
 
 	// RSA Decrypt (with private key)
@@ -284,28 +272,28 @@ public class TheApplet extends Applet {
 	}
 
 
-	void putPublicRSAKey(APDU apdu) {
-		byte[] buffer = apdu.getBuffer();
-		// get the element type and length
-		byte keyElement = (byte)(buffer[ISO7816.OFFSET_P1] & 0xFF);
-		short publicValueLength = (short)(buffer[ISO7816.OFFSET_LC] & 0xFF);
-		// check correct type (modulus or exponent)
-		if((keyElement != 0x00) && (keyElement != 0x01))
-			ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
-		// use data in
-		apdu.setIncomingAndReceive();
-		// initialize RSA public key
-		// check elements length for modulus only because exponent is naturaly short
-		if(keyElement == 0) {
-			// loading modulus
-			if(publicValueLength != (short)(cipherRSAKeyLength/8))
-				ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
-			// initialize modulus
-			((RSAPublicKey)publicRSAKey).setModulus(buffer, (short)ISO7816.OFFSET_CDATA, (short)(buffer[ISO7816.OFFSET_LC] & 0xFF));
-		} else
-			// initialize exponent
-			((RSAPublicKey)publicRSAKey).setExponent(buffer, (short)ISO7816.OFFSET_CDATA, (short)(buffer[ISO7816.OFFSET_LC] & 0xFF));
-	}
+	// void putPublicRSAKey(APDU apdu) {
+	// 	byte[] buffer = apdu.getBuffer();
+	// 	// get the element type and length
+	// 	byte keyElement = (byte)(buffer[ISO7816.OFFSET_P1] & 0xFF);
+	// 	short publicValueLength = (short)(buffer[ISO7816.OFFSET_LC] & 0xFF);
+	// 	// check correct type (modulus or exponent)
+	// 	if((keyElement != 0x00) && (keyElement != 0x01))
+	// 		ISOException.throwIt(ISO7816.SW_INCORRECT_P1P2);
+	// 	// use data in
+	// 	apdu.setIncomingAndReceive();
+	// 	// initialize RSA public key
+	// 	// check elements length for modulus only because exponent is naturaly short
+	// 	if(keyElement == 0) {
+	// 		// loading modulus
+	// 		if(publicValueLength != (short)(cipherRSAKeyLength/8))
+	// 			ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
+	// 		// initialize modulus
+	// 		((RSAPublicKey)publicRSAKey).setModulus(buffer, (short)ISO7816.OFFSET_CDATA, (short)(buffer[ISO7816.OFFSET_LC] & 0xFF));
+	// 	} else
+	// 		// initialize exponent
+	// 		((RSAPublicKey)publicRSAKey).setExponent(buffer, (short)ISO7816.OFFSET_CDATA, (short)(buffer[ISO7816.OFFSET_LC] & 0xFF));
+	// }
 
 
 }

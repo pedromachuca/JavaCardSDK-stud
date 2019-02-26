@@ -1,12 +1,26 @@
 package client;
 
+import java.math.BigInteger;
+
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+import java.security.Security;
+import java.security.spec.RSAPublicKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
+import javax.crypto.Cipher;
+
 import java.net.*;
 import java.io.*;
 import java.util.Date;
+import java.util.Random;
 import opencard.core.service.*;
 import opencard.core.terminal.*;
 import opencard.core.util.*;
 import opencard.opt.util.*;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import sun.misc.BASE64Encoder;
 
 public class TheClient extends Thread{
 
@@ -17,13 +31,14 @@ public class TheClient extends Thread{
   Socket socket;
   boolean loop = true;
 
-  private final static byte CLA_TEST                    		= (byte)0x90;
-  private final static byte INS_TESTDES_ECB_NOPAD_ENC       	= (byte)0x28;
-  private final static byte INS_TESTDES_ECB_NOPAD_DEC       	= (byte)0x29;
-  private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
-  private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
-  private final static byte INS_RSA_ENC		           	= (byte)0x00;
-  private final static byte INS_RSA_DEC		           	= (byte)0x01;
+  byte [] modulus = new byte[255];
+  byte [] exponent = new byte[4];
+
+  private final static byte CLA                    = (byte)0x90;
+  private final static byte INS_GET_PUBLIC_RSA_KEY = (byte)0xFE;
+  private final static byte P1				             = (byte)0x00;
+	private final static byte P2					           = (byte)0x00;
+
 
   private PassThruCardService servClient = null;
   final static boolean DISPLAY = true;
@@ -57,11 +72,11 @@ public class TheClient extends Thread{
         } else
           System.out.println( "did not get a SmartCard object!\n" );
         initNewCard( sm );
-        SmartCard.shutdown();
       } catch( Exception e ) {
         System.out.println( "TheClient error: " + e.getMessage() );
       }
-      //Authentification
+      mainLoop();
+
       this.start();
       try{
         String message="";
@@ -69,6 +84,7 @@ public class TheClient extends Thread{
           message = consoleVersResInput.readLine();
           consoleVersResOutput.println(message);
         }
+      SmartCard.shutdown();
       }catch( IOException e ) {
         System.out.println( "Probleme de lecture" );
       }
@@ -148,7 +164,7 @@ public class TheClient extends Thread{
         }
 
 
-        private void initNewCard( SmartCard card ) {
+    private void initNewCard( SmartCard card ) {
     	if( card != null )
     		System.out.println( "Smartcard inserted\n" );
     	else {
@@ -173,14 +189,80 @@ public class TheClient extends Thread{
     	} else
     		System.out.println( "Applet selected\n" );
 
-    	foo();
-    }
-    public void foo(){
-      System.out.println("INSIDE FOOOO !!!");
+    	// authentification();
     }
 
    public boolean authentification(){
+
+     byte[] cmd_ = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x00, (byte)0x00};
+     CommandAPDU cmd = new CommandAPDU( cmd_ );
+     System.out.println("Modulus expected...Avec 0x00");
+     ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+     modulus = resp.getBytes();
+
+     byte[] cmd_1 = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x01, (byte)0x00};
+     CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
+     System.out.println("Exponent expected... Avec 0x01");
+     ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
+     exponent = resp.getBytes();
+     String pubkey = generatePub();
+     // try{
+     //   sleep(10);
+     // }catch(Exception InterruptedException){
+     //   System.out.println("Sleep exepction");
+     // }
+      consoleVersResOutput.println(pubkey);
+
      return true;
+   }
+
+   public String generatePub(){
+     String b64PublicKey = "";
+
+     String mod =  HexString.hexify( modulus );
+     mod = mod.replaceAll( " ", "" );
+     mod = mod.replaceAll( "\n", "" );
+
+     String exp =  HexString.hexify( exponent );
+     exp = exp.replaceAll( " ", "" );
+     exp = exp.replaceAll( "\n", "" );
+
+     // Load the keys from String into BigIntegers (step 3)
+     BigInteger BImodulus = new BigInteger(mod, 16);
+     BigInteger BIexponent = new BigInteger(exp, 16);
+
+     try{
+
+       RSAPublicKeySpec publicSpec = new RSAPublicKeySpec(BImodulus, BIexponent);
+       KeyFactory factory = KeyFactory.getInstance( "RSA" );
+       PublicKey pub = factory.generatePublic(publicSpec);
+       byte[] encodedPublicKey = pub.getEncoded();
+       BASE64Encoder encoder = new BASE64Encoder();
+       b64PublicKey = encoder.encode(encodedPublicKey).replaceAll(System.getProperty("line.separator"),"");
+       System.out.println("Public key : "+b64PublicKey);
+
+     }catch(Exception NoSuchAlgorithmException){
+       System.out.println( "no such algo" );
+     }
+     return b64PublicKey;
+   }
+
+   public void nameOk(){
+
+     // String message ="";
+     // try{
+     //   message = resVersConsoleInput.readLine();
+     //   while(!message.equals("OK")){
+     //     message = resVersConsoleInput.readLine();
+     //   }
+     // }catch(Exception IOException){
+     //   System.out.println("nameok");
+     // }
+     try{
+       consoleVersResInput.readLine();
+     }catch( IOException e ){
+       System.out.println( "Probleme d'initialisation des streams" );
+     }
    }
 
   public boolean initStreams(){
@@ -196,6 +278,11 @@ public class TheClient extends Thread{
       System.out.println( "Probleme d'initialisation des streams" );
     }
     return result;
+  }
+
+  public void mainLoop(){
+    nameOk();
+    authentification();
   }
 
   public void run(){
