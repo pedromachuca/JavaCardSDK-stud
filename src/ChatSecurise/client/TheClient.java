@@ -119,7 +119,7 @@ public class TheClient extends Thread{
 				displayAPDU(cmd, result);
 		} catch( Exception e ) {
 			System.out.println( "Exception caught in sendAPDU: " + e.getMessage() );
-		//	java.lang.System.exit( -1 );
+			java.lang.System.exit( -1 );
 		}
 		return result;
 	}
