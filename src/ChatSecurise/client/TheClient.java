@@ -40,6 +40,8 @@ public class TheClient extends Thread{
   private final static byte INS_RSA_DECRYPT        = (byte)0xA2;
   private final static byte P1				             = (byte)0x00;
 	private final static byte P2					           = (byte)0x00;
+  private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
+  private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
 
 
   private PassThruCardService servClient = null;
@@ -84,6 +86,7 @@ public class TheClient extends Thread{
         String message="";
         while(loop){
           message = consoleVersResInput.readLine();
+          qsqdqsd= cipher(INS_DES_ECB_NOPAD_ENC, message);
           consoleVersResOutput.println(message);
           if (message.equals("/quit")) {
               consoleVersResInput.close();
@@ -200,65 +203,163 @@ public class TheClient extends Thread{
     		System.out.println( "Applet selected\n" );
 
     }
+    void cipher(byte typeINS){
 
-   public boolean sendPubKey(){
+        try{
+          if (typeINS==CIPHERFILE) {
+             System.out.println( "Veuillez entrer le nom de fichier a chiffrer:" );
+          }else{
+            System.out.println( "Veuillez entrer le nom de fichier a dechiffrer:" );
+          }
 
-     byte[] cmd_ = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x00, (byte)0x00};
-     CommandAPDU cmd = new CommandAPDU( cmd_ );
-     System.out.println("Modulus expected...Avec 0x00");
-     ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
-     byte[] tmpmodulus = resp.getBytes();
-     System.arraycopy(tmpmodulus, 1, modulus, 0, 128);
+    			 String filename = readKeyboard();
+
+    			 File file=null;
+    			 long fileLength=0;
+           int totalLength = 0;
+    			 file = new File(filename);
+    			 fileLength = file.length();
+           int leftpadding = (int)DATAMAXSIZE -((int)fileLength%DATAMAXSIZE);
+
+           if (typeINS==UNCIPHERFILE){
+             totalLength = (int)fileLength;
+           }
+           else{
+              totalLength =(int)fileLength+(int)leftpadding;
+           }
+           FileInputStream inputstream = new FileInputStream(file);
+
+           byte[] result = new byte[(int)DATAMAXSIZE];
+           int compteur = 0;
+           int data = 0;
+           String ciphered = "";
+
+           byte[] result2 = new byte [totalLength];
+
+           while(((data = inputstream.read(result)) >= 0) ){
+
+             byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
+
+             int size_part = cmd_part.length;
+
+             totalLength =DATAMAXSIZE+size_part;
+             byte[] cmd_= new byte[totalLength+1];
+
+             System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
+
+             if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE){
+               for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
+                   result[i]=(byte)leftpadding;
+                 }
+             }
+
+             System.arraycopy(result, 0, cmd_, size_part, DATAMAXSIZE);
+             cmd_ [totalLength]=(byte)DATAMAXSIZE;
+
+            CommandAPDU cmd1 = new CommandAPDU( cmd_ );
+            ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+
+            byte[] result1 =resp.getBytes();
+            if (typeINS==UNCIPHERFILE){
+              leftpadding = (int)(result1[result1.length-3]&0xff);
+            }
+            System.arraycopy(result1, 0, result2, compteur, result1.length-2);
+            compteur+=DATAMAXSIZE;
+    			}
+
+          inputstream.close();
+
+          if (typeINS==UNCIPHERFILE) {
+            if (leftpadding>0) {
+              int uncipherlength = result2.length - leftpadding;
+              byte[] result4 = new byte [uncipherlength];
+              System.arraycopy(result2, 0, result4, 0, uncipherlength);
+              writeOutputFile(result4, typeINS);
+            }
+            else{
+              System.out.println("Wrong key to decipher");
+            }
+          }
+
+          if (typeINS==CIPHERFILE) {
+            writeOutputFile(result2, typeINS);
+          }
+
+        }catch(FileNotFoundException e){
+          System.out.println(e.getMessage());
+        }catch(IOException e){
+          System.out.println(e.getMessage());
+        }
+    }
+    String readKeyboard() {
+    		String result = null;
+
+    		try {
+    			BufferedReader input = new BufferedReader( new InputStreamReader( System.in ) );
+    			result = input.readLine();
+    		} catch( Exception e ) {}
+
+    		return result;
+    }
+
+    public boolean sendPubKey(){
+
+      byte[] cmd_ = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x00, (byte)0x00};
+      CommandAPDU cmd = new CommandAPDU( cmd_ );
+      System.out.println("Modulus expected...Avec 0x00");
+      ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
+      byte[] tmpmodulus = resp.getBytes();
+      System.arraycopy(tmpmodulus, 1, modulus, 0, 128);
 
 
-     byte[] cmd_1 = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x01, (byte)0x00};
-     CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
-     System.out.println("Exponent expected... Avec 0x01");
-     ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
-     byte[] tmpexponent = resp1.getBytes();
+      byte[] cmd_1 = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x01, (byte)0x00};
+      CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
+      System.out.println("Exponent expected... Avec 0x01");
+      ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
+      byte[] tmpexponent = resp1.getBytes();
 
-     System.arraycopy(tmpexponent, 1, exponent, 0, 3);
+      System.arraycopy(tmpexponent, 1, exponent, 0, 3);
 
-     String pubkey = generatePub();
-     consoleVersResOutput.println(pubkey);
+      String pubkey = generatePub();
+      consoleVersResOutput.println(pubkey);
 
-     return true;
-   }
+      return true;
+    }
 
-   public String generatePub(){
+    public String generatePub(){
 
-     String b64PublicKey = "";
+      String b64PublicKey = "";
 
-     String mod =  HexString.hexify( modulus );
-     mod = mod.replaceAll( " ", "" );
-     mod = mod.replaceAll( "\n", "" );
+      String mod =  HexString.hexify( modulus );
+      mod = mod.replaceAll( " ", "" );
+      mod = mod.replaceAll( "\n", "" );
 
-     String exp =  HexString.hexify( exponent );
-     exp = exp.replaceAll( " ", "" );
-     exp = exp.replaceAll( "\n", "" );
+      String exp =  HexString.hexify( exponent );
+      exp = exp.replaceAll( " ", "" );
+      exp = exp.replaceAll( "\n", "" );
 
-     // Load the keys from String into BigIntegers (step 3)
-     BigInteger BImodulus = new BigInteger(mod, 16);
-     BigInteger BIexponent = new BigInteger(exp, 16);
+      // Load the keys from String into BigIntegers (step 3)
+      BigInteger BImodulus = new BigInteger(mod, 16);
+      BigInteger BIexponent = new BigInteger(exp, 16);
 
-     try{
+      try{
 
-       RSAPublicKeySpec publicSpec = new RSAPublicKeySpec(BImodulus, BIexponent);
-       KeyFactory factory = KeyFactory.getInstance( "RSA" );
-       PublicKey pub = factory.generatePublic(publicSpec);
-       byte[] encodedPublicKey = pub.getEncoded();
+        RSAPublicKeySpec publicSpec = new RSAPublicKeySpec(BImodulus, BIexponent);
+        KeyFactory factory = KeyFactory.getInstance( "RSA" );
+        PublicKey pub = factory.generatePublic(publicSpec);
+        byte[] encodedPublicKey = pub.getEncoded();
 
 
-       BASE64Encoder encoder = new BASE64Encoder();
-       b64PublicKey = encoder.encode(encodedPublicKey).replaceAll(System.getProperty("line.separator"),"");
+        BASE64Encoder encoder = new BASE64Encoder();
+        b64PublicKey = encoder.encode(encodedPublicKey).replaceAll(System.getProperty("line.separator"),"");
 
-     }catch(Exception e){
-       System.out.println( "no such algo"+e );
-     }
-     return b64PublicKey;
-   }
+      }catch(Exception e){
+        System.out.println( "no such algo"+e );
+      }
+      return b64PublicKey;
+    }
 
-   public void sendChall(){
+    public void sendChall(){
 
       String encodedString ="";
       BASE64Decoder decoder;
@@ -296,9 +397,9 @@ public class TheClient extends Thread{
         String b64PublicKey = encoder.encode(ChallRep).replaceAll(System.getProperty("line.separator"),"");
         consoleVersResOutput.println(b64PublicKey);
 
-    }catch(Exception e){
-      System.out.println("Problem with sendChall :"+e.getMessage());
-    }
+      }catch(Exception e){
+        System.out.println("Problem with sendChall :"+e.getMessage());
+      }
    }
 
 
@@ -368,6 +469,7 @@ public class TheClient extends Thread{
       while(loop){
         String message="";
         message = resVersConsoleInput.readLine();
+        cipher(INS_DES_ECB_NOPAD_DEC);
         resVersConsoleOutput.println(message);
       }
     }catch( IOException e ) {

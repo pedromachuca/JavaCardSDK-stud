@@ -9,17 +9,29 @@ public class TheApplet extends Applet {
 	private final static byte CLA_TEST                    = (byte)0x90;
 	private final static byte INS_RSA_DECRYPT             = (byte)0xA2;
 	private final static byte INS_GET_PUBLIC_RSA_KEY      = (byte)0xFE;
+	private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
+	private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
 
 	// cipher instances
-	private Cipher cRSA_NO_PAD;
+	private Cipher cDES_ECB_NOPAD_enc, cDES_ECB_NOPAD_dec;
 	// key objects
 	private KeyPair keyPair;
 	private Key publicRSAKey, privateRSAKey;
-
+	private Key secretDESKey;
 	// cipher key length
 	private short cipherRSAKeyLength;
 
-	// RSA Keys section
+
+	static final byte[] theDESKey =
+	new byte[] { (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA, (byte)0xCA };
+
+
+	// cipher instances
+	private Cipher cDES_ECB_NOPAD;
+
+	boolean	keyDES, DES_ECB_NOPAD, DES_CBC_NOPAD;
+
+
 
 	// n = modulus
 	static final byte[] n = new byte[] {
@@ -168,6 +180,9 @@ public class TheApplet extends Applet {
 
 
 	protected TheApplet() {
+		initKeyDES();
+	  initDES_ECB_NOPAD();
+
 		publicRSAKey = privateRSAKey = null;
 		cRSA_NO_PAD = null;
 
@@ -186,6 +201,29 @@ public class TheApplet extends Applet {
 
 		register();
 
+	}
+
+	private void initKeyDES() {
+		try {
+			secretDESKey = KeyBuilder.buildKey(KeyBuilder.TYPE_DES, KeyBuilder.LENGTH_DES, false);
+			((DESKey)secretDESKey).setKey(theDESKey,(short)0);
+			keyDES = true;
+		} catch( Exception e ) {
+			keyDES = false;
+		}
+	}
+
+
+	private void initDES_ECB_NOPAD() {
+		if( keyDES ) try {
+			cDES_ECB_NOPAD_enc = Cipher.getInstance(Cipher.ALG_DES_ECB_NOPAD, false);//enc ->utilise des en mode ecb no pad
+			cDES_ECB_NOPAD_dec = Cipher.getInstance(Cipher.ALG_DES_ECB_NOPAD, false);
+			cDES_ECB_NOPAD_enc.init( secretDESKey, Cipher.MODE_ENCRYPT );
+			cDES_ECB_NOPAD_dec.init( secretDESKey, Cipher.MODE_DECRYPT );
+			DES_ECB_NOPAD = true;
+		} catch( Exception e ) {
+			DES_ECB_NOPAD = false;
+		}
 	}
 
 
@@ -208,9 +246,22 @@ public class TheApplet extends Applet {
 			// case INS_RSA_ENCRYPT: RSAEncrypt(apdu); break;
 			case INS_RSA_DECRYPT: RSADecrypt(apdu); break;
 			case INS_GET_PUBLIC_RSA_KEY: getPublicRSAKey(apdu); break;
-			// case INS_PUT_PUBLIC_RSA_KEY: putPublicRSAKey(apdu); break;
+			case INS_DES_ECB_NOPAD_ENC: if( DES_ECB_NOPAD )
+				cipherGeneric( apdu, cDES_ECB_NOPAD_enc, KeyBuilder.LENGTH_DES ); break;
+			case INS_DES_ECB_NOPAD_DEC: if( DES_ECB_NOPAD )
+				cipherGeneric( apdu, cDES_ECB_NOPAD_dec, KeyBuilder.LENGTH_DES  ); break;
 			default: ISOException.throwIt(ISO7816.SW_FUNC_NOT_SUPPORTED);
 		}
+	}
+
+	 void cipherGeneric( APDU apdu, Cipher cipher, short keyLength ) {
+    apdu.setIncomingAndReceive();
+		byte[] buffer = apdu.getBuffer();
+    cipher.doFinal( buffer, (short)5, (short)buffer[4], buffer, (short)5 );
+    apdu.setOutgoingAndSend((short)5,(short)buffer[4]);
+		// Write the method ciphering/unciphering data from the computer.
+		// The result is sent back to the computer.
+    //buffer[4] -> LC nbre d'octet a traiter
 	}
 
 	// RSA Decrypt (with private key)
