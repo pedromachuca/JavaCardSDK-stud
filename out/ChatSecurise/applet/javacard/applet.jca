@@ -1,5 +1,5 @@
 // converted by version 1.3
-// on Tue Feb 26 18:13:16 CET 2019
+// on Wed Feb 27 14:46:28 CET 2019
 
 .package applet {
 	.aid 0xA0:0x0:0x0:0x0:0x62:0x3:0x1:0xC:0x6;
@@ -65,18 +65,14 @@
 			.descriptor	Ljavacard/framework/APDU;	0.10;
 
 		// 20
+		virtualMethodRef 0.10.6()S;		// javacard/framework/APDU.setIncomingAndReceive()S
+		// 21
 		virtualMethodRef 1.1.3(Ljavacard/security/Key;B)V;		// javacardx/crypto/Cipher.init(Ljavacard/security/Key;B)V
 			.descriptor	Ljavacard/security/Key;	2.0;
 
-		// 21
-		staticFieldRef byte[] TheApplet/cRSAPublicEncResult;
 		// 22
 		virtualMethodRef 1.1.1([BSS[BS)S;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
 		// 23
-		staticFieldRef byte[] TheApplet/inC;
-		// 24
-		staticMethodRef 0.16.0([BS[BSS)B;		// javacard/framework/Util.arrayCompare([BS[BSS)B
-		// 25
 		virtualMethodRef 0.10.8(SS)V;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
 	}
 
@@ -234,43 +230,35 @@
 		}
 
 		.method  RSADecrypt(Ljavacard/framework/APDU;)V 128 {
-			.stack 8;
-			.locals 1;
+			.stack 6;
+			.locals 2;
 
 			.descriptor	Ljavacard/framework/APDU;	0.10;
 
 				L0:	aload_1;
+					invokevirtual 20;		// javacard/framework/APDU.setIncomingAndReceive()S
+					pop;
+					aload_1;
 					invokevirtual 16;		// javacard/framework/APDU.getBuffer()[B
 					astore_2;
 					getfield_a_this 2;		// reference applet/TheApplet.cRSA_NO_PAD
 					getfield_a_this 0;		// reference applet/TheApplet.privateRSAKey
 					sconst_1;
-					invokevirtual 20;		// javacardx/crypto/Cipher.init(Ljavacard/security/Key;B)V
+					invokevirtual 21;		// javacardx/crypto/Cipher.init(Ljavacard/security/Key;B)V
+					sspush 128;
+					sstore_3;
 					getfield_a_this 2;		// reference applet/TheApplet.cRSA_NO_PAD
-					getstatic_a 21;		// reference applet/TheApplet.cRSAPublicEncResult
-					sconst_0;
-					getfield_s_this 3;		// short applet/TheApplet.cipherRSAKeyLength
-					bspush 8;
-					sdiv;
 					aload_2;
-					sconst_1;
+					sconst_5;
+					sload_3;
+					aload_2;
+					sconst_0;
 					invokevirtual 22;		// javacardx/crypto/Cipher.doFinal([BSS[BS)S
 					pop;
-					aload_2;
-					sconst_0;
-					aload_2;
-					sconst_1;
-					getstatic_a 23;		// reference applet/TheApplet.inC
-					sconst_0;
-					getfield_s_this 3;		// short applet/TheApplet.cipherRSAKeyLength
-					bspush 8;
-					sdiv;
-					invokestatic 24;		// javacard/framework/Util.arrayCompare([BS[BSS)B
-					bastore;
 					aload_1;
 					sconst_0;
-					sconst_1;
-					invokevirtual 25;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
+					sload_3;
+					invokevirtual 23;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
 					return;
 		}
 
@@ -327,7 +315,7 @@
 					sand;
 					sconst_1;
 					sadd;
-					invokevirtual 25;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
+					invokevirtual 23;		// javacard/framework/APDU.setOutgoingAndSend(SS)V
 					return;
 		}
 

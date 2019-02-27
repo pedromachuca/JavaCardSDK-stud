@@ -105,7 +105,7 @@ public class ServiceChat extends Thread{
       final int DATASIZE = 128;				//128 to use with RSA1024_NO_PAD
       Random r = new Random( (new Date()).getTime() );
       r.nextBytes( challengeBytes );
-
+      challengeBytes[0] &=127;
       // Crypt with public key (step 3)
       cRSA_NO_PAD.init( Cipher.ENCRYPT_MODE, publicRSAKey.get(username));
       byte[] ciphered = new byte[DATASIZE];
@@ -113,13 +113,23 @@ public class ServiceChat extends Thread{
       cRSA_NO_PAD.doFinal(challengeBytes, 0, DATASIZE, ciphered, 0);
       System.out.println( "*" );
 
-      for (int i=0;i<ciphered.length ;i++ ) {
-          System.out.print(" "+ciphered[i]);
-      }
+
       String encodedString = Base64.getEncoder().encodeToString(ciphered);
-      System.out.println(encodedString);
       output.println(encodedString);
-      //input.readLine();
+      encodedString = input.readLine();
+      byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
+
+      System.out.println("challengeBytes");
+      int compteur=0;
+      for (int i=0;i<decodedBytes.length ;i++ ) {
+          if (decodedBytes[i]==challengeBytes[i]) {
+              compteur+=1;
+          }
+      }
+      if (compteur==128) {
+          output.println("Challok");
+      }
+
 
     }catch(Exception e){
       System.out.println("Problem with Challenge :"+e.getMessage());

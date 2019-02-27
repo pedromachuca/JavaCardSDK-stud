@@ -21,6 +21,7 @@ import opencard.opt.util.*;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import sun.misc.BASE64Encoder;
+import sun.misc.BASE64Decoder;
 
 public class TheClient extends Thread{
 
@@ -36,6 +37,7 @@ public class TheClient extends Thread{
 
   private final static byte CLA                    = (byte)0x90;
   private final static byte INS_GET_PUBLIC_RSA_KEY = (byte)0xFE;
+  private final static byte INS_RSA_DECRYPT        = (byte)0xA2;
   private final static byte P1				             = (byte)0x00;
 	private final static byte P2					           = (byte)0x00;
 
@@ -117,7 +119,7 @@ public class TheClient extends Thread{
 				displayAPDU(cmd, result);
 		} catch( Exception e ) {
 			System.out.println( "Exception caught in sendAPDU: " + e.getMessage() );
-			java.lang.System.exit( -1 );
+		//	java.lang.System.exit( -1 );
 		}
 		return result;
 	}
@@ -172,6 +174,7 @@ public class TheClient extends Thread{
 
 
     private void initNewCard( SmartCard card ) {
+
     	if( card != null )
     		System.out.println( "Smartcard inserted\n" );
     	else {
@@ -223,6 +226,7 @@ public class TheClient extends Thread{
    }
 
    public String generatePub(){
+
      String b64PublicKey = "";
 
      String mod =  HexString.hexify( modulus );
@@ -255,9 +259,49 @@ public class TheClient extends Thread{
    }
 
    public void sendChall(){
-      System.out.println("INSIDE sendChall");
-      String encodedString = resVersConsoleInput.readLine();
+
+      String encodedString ="";
+      BASE64Decoder decoder;
+      BASE64Encoder encoder;
+      byte [] decodedBI = new byte[128];
+
+      try{
+        encodedString = resVersConsoleInput.readLine();
+        decoder = new BASE64Decoder();
+        decodedBI = decoder.decodeBuffer(encodedString);
+
+        for (int i=0;i<decodedBI.length ;i++ ) {
+            System.out.print(" "+decodedBI[i]);
+        }
+        byte[] cmd_part = {CLA, INS_RSA_DECRYPT, P1, P2, (byte)0x80};
+        int size_part = cmd_part.length;
+
+        int totalLength =128+size_part;
+        byte[] cmd_1= new byte[totalLength+1];
+
+        System.arraycopy(cmd_part, 0, cmd_1, 0, size_part);
+        System.arraycopy(decodedBI, 0, cmd_1, size_part, 128);
+        cmd_1[totalLength]=(byte)0x80;
+
+        CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
+        System.out.println("Decrypt RSA...");
+        displayAPDU(cmd2);
+        ResponseAPDU resp = this.sendAPDU( cmd2, DISPLAY );
+        byte[] clairBI = resp.getBytes();
+
+        byte[] ChallRep = new byte[128];
+        System.arraycopy(clairBI, 0, ChallRep, 0, 128);
+
+        encoder = new BASE64Encoder();
+        String b64PublicKey = encoder.encode(ChallRep).replaceAll(System.getProperty("line.separator"),"");
+        consoleVersResOutput.println(b64PublicKey);
+
+    }catch(Exception e){
+      System.out.println("Problem with sendChall :"+e.getMessage());
+    }
    }
+
+
    public String cmd(){
 
      String message ="";
@@ -275,9 +319,8 @@ public class TheClient extends Thread{
             return "chall";
           }
 
-
-     }catch(Exception IOException){
-       System.out.println("nameok");
+     }catch(IOException e){
+       System.out.println("Inside cmd()");
      }
      return "";
    }
@@ -298,15 +341,24 @@ public class TheClient extends Thread{
   }
 
   public void mainLoop(){
-    while(true){
+
+    boolean loop1 = true;
+    while(loop1){
       String cmd = cmd();
       if (cmd.equals("ok")){
         sendPubKey();
-        break;
+        loop1=false;
       }
       if (cmd.equals("chall")) {
         sendChall();
-        break;
+        try{
+          String message = resVersConsoleInput.readLine();
+          if (message.equals("Challok")) {
+            loop1=false;
+          }
+        }catch(IOException e){
+          System.out.println(e.getMessage());
+        }
       }
     }
   }

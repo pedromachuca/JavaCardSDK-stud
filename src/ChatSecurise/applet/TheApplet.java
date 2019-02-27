@@ -215,15 +215,18 @@ public class TheApplet extends Applet {
 
 	// RSA Decrypt (with private key)
 	void RSADecrypt(APDU apdu) {
+		apdu.setIncomingAndReceive();
 		byte[] buffer = apdu.getBuffer();
 		// initialize the algorithm with default key
 		cRSA_NO_PAD.init( privateRSAKey, Cipher.MODE_DECRYPT );
+		short dataLen = (short)(128);
 		// compute internel test
-		cRSA_NO_PAD.doFinal( cRSAPublicEncResult, (short)0, (short)(cipherRSAKeyLength/8), buffer, (short)1 );
+		// cRSA_NO_PAD.doFinal( cRSAPublicEncResult, (short)0, (short)(cipherRSAKeyLength/8), buffer, (short)1 );
+		cRSA_NO_PAD.doFinal( buffer, (short)5, (short)dataLen, buffer, (short)0 );
 		// compare result with the patern
-		buffer[0] = Util.arrayCompare( buffer, (short)1, inC, (short)0, (short)(cipherRSAKeyLength/8) );
+		//buffer[0] = Util.arrayCompare( buffer, (short)1, inC, (short)0, (short)(cipherRSAKeyLength/8) );
 		// send difference
-		apdu.setOutgoingAndSend( (short)0, (short)1 );
+		apdu.setOutgoingAndSend((short)0,(short)dataLen);
 	}
 
 
