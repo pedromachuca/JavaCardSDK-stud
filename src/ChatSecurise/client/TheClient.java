@@ -40,12 +40,14 @@ public class TheClient extends Thread{
   private final static byte INS_RSA_DECRYPT        = (byte)0xA2;
   private final static byte P1				             = (byte)0x00;
 	private final static byte P2					           = (byte)0x00;
-  private final static byte INS_DES_ECB_NOPAD_ENC           	= (byte)0x20;
-  private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
+  private final static byte INS_DES_ECB_NOPAD_ENC  = (byte)0x20;
+  private final static byte INS_DES_ECB_NOPAD_DEC  = (byte)0x21;
+
 
 
   private PassThruCardService servClient = null;
   final static boolean DISPLAY = true;
+  private  int DATAMAXSIZE             = 248;
 
   public static void main(String argv[]) throws Exception{
     try{
@@ -86,7 +88,7 @@ public class TheClient extends Thread{
         String message="";
         while(loop){
           message = consoleVersResInput.readLine();
-          qsqdqsd= cipher(INS_DES_ECB_NOPAD_ENC, message);
+          message= cipher(INS_DES_ECB_NOPAD_ENC, message);
           consoleVersResOutput.println(message);
           if (message.equals("/quit")) {
               consoleVersResInput.close();
@@ -203,42 +205,119 @@ public class TheClient extends Thread{
     		System.out.println( "Applet selected\n" );
 
     }
-    void cipher(byte typeINS){
+    // public String sendtoCard(byte typeINS, String message){
+    //
+    //   BASE64Decoder decoder;
+    //   BASE64Encoder encoder;
+    //   String b64toServer="";
+    //   int lengthM = message.length();
+    //   byte [] messageByte = new byte[lengthM];
+    //
+    //   try{
+    //
+    //     if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
+    //       decoder = new BASE64Decoder();
+    //       messageByte = decoder.decodeBuffer(message);
+    //     }
+    //     else{
+    //       messageByte = message.getBytes();
+    //     }
+    //     byte[] cmd_part = {CLA, typeINS, P1, P2, (byte)lengthM};
+    //     int size_part = cmd_part.length;
+    //
+    //     int totalLength =lengthM+size_part;
+    //     byte[] cmd_1= new byte[totalLength+1];
+    //
+    //     System.arraycopy(cmd_part, 0, cmd_1, 0, size_part);
+    //     System.arraycopy(messageByte, 0, cmd_1, size_part, lengthM);
+    //     cmd_1[totalLength]=(byte)lengthM;
+    //
+    //     CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
+    //     System.out.println("Sending to card...");
+    //     displayAPDU(cmd2);
+    //     ResponseAPDU resp = this.sendAPDU( cmd2, DISPLAY );
+    //     byte[] recved = resp.getBytes();
+    //
+    //     byte[] afterCard = new byte[128];
+    //     System.arraycopy(recved, 0, afterCard, 0, lengthM);
+    //
+    //     if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
+    //       encoder = new BASE64Encoder();
+    //       b64toServer = encoder.encode(afterCard).replaceAll(System.getProperty("line.separator"),"");
+    //     }
+    //
+    //   }catch(Exception e){
+    //     System.out.println("Problem with sendtocard :"+e.getMessage());
+    //   }
+    //   return b64toServer;
+    // }
+    public String sendtoCard(byte typeINS, String message){
 
+        BASE64Decoder decoder;
+        BASE64Encoder encoder;
+        String b64toServer="";
+        int lengthM = 0;
+        byte [] messageByte = new byte[DATAMAXSIZE];
+        System.out.println(message);
+        
         try{
-          if (typeINS==CIPHERFILE) {
-             System.out.println( "Veuillez entrer le nom de fichier a chiffrer:" );
-          }else{
-            System.out.println( "Veuillez entrer le nom de fichier a dechiffrer:" );
+          if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
+            decoder = new BASE64Decoder();
+
+              messageByte = decoder.decodeBuffer(message);
+              System.out.print("\nDEC\n");
+              for (int i=0;i<messageByte.length ;i++ ) {
+                System.out.print(" "+messageByte[i]);
+              }
+              System.out.print("\nDEC\n");
+
+             lengthM= messageByte.length;
+             System.out.println(DATAMAXSIZE);
+             System.out.println(lengthM);
+          }
+          else{
+            messageByte = message.getBytes();
+            lengthM= messageByte.length;
           }
 
-    			 String filename = readKeyboard();
+          int totalLength = 0;
 
-    			 File file=null;
-    			 long fileLength=0;
-           int totalLength = 0;
-    			 file = new File(filename);
-    			 fileLength = file.length();
-           int leftpadding = (int)DATAMAXSIZE -((int)fileLength%DATAMAXSIZE);
+          if (lengthM <248 && lengthM>8 && lengthM%8!=0 ) {
+             int rest = lengthM%8;
+             int toAdd = 8-rest;
+             DATAMAXSIZE = toAdd+lengthM;
+          }
+          if (lengthM<8) {
+            DATAMAXSIZE = 8;
+          }
+          if (lengthM%8==0) {
+            DATAMAXSIZE = lengthM;
+          }
 
-           if (typeINS==UNCIPHERFILE){
-             totalLength = (int)fileLength;
+           int leftpadding = (int)DATAMAXSIZE -((int)lengthM%DATAMAXSIZE);
+           System.out.println("DMS : "+DATAMAXSIZE);
+           System.out.println("LP : "+leftpadding);
+           System.out.println("length : "+lengthM);
+           if (typeINS==INS_DES_ECB_NOPAD_DEC){
+             totalLength = (int)lengthM;
            }
            else{
-              totalLength =(int)fileLength+(int)leftpadding;
+               totalLength =(int)lengthM+(int)leftpadding;
            }
-           FileInputStream inputstream = new FileInputStream(file);
-
+           if (leftpadding%8==0&&typeINS==INS_DES_ECB_NOPAD_ENC) {
+             DATAMAXSIZE = DATAMAXSIZE+8;
+           }
            byte[] result = new byte[(int)DATAMAXSIZE];
            int compteur = 0;
            int data = 0;
            String ciphered = "";
 
            byte[] result2 = new byte [totalLength];
+           InputStream inputstream = new ByteArrayInputStream(messageByte);
 
            while(((data = inputstream.read(result)) >= 0) ){
 
-             byte[] cmd_part = {CLA_TEST, typeINS, P1_EMPTY, P2_EMPTY, (byte)DATAMAXSIZE};
+             byte[] cmd_part = {CLA, typeINS, P1, P2, (byte)DATAMAXSIZE};
 
              int size_part = cmd_part.length;
 
@@ -247,8 +326,13 @@ public class TheClient extends Thread{
 
              System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
 
-             if (typeINS==CIPHERFILE&&data!=DATAMAXSIZE){
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE){
                for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
+                   result[i]=(byte)leftpadding;
+                 }
+             }
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data==DATAMAXSIZE){
+               for (int i=DATAMAXSIZE;i<DATAMAXSIZE+leftpadding;i++ ) {
                    result[i]=(byte)leftpadding;
                  }
              }
@@ -260,46 +344,124 @@ public class TheClient extends Thread{
             ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
 
             byte[] result1 =resp.getBytes();
-            if (typeINS==UNCIPHERFILE){
+
+            if (typeINS==INS_DES_ECB_NOPAD_DEC){
               leftpadding = (int)(result1[result1.length-3]&0xff);
             }
-            System.arraycopy(result1, 0, result2, compteur, result1.length-2);
+            System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
             compteur+=DATAMAXSIZE;
-    			}
+          }
 
-          inputstream.close();
+          if (typeINS==INS_DES_ECB_NOPAD_DEC) {
+            if (leftpadding>0){
 
-          if (typeINS==UNCIPHERFILE) {
-            if (leftpadding>0) {
-              int uncipherlength = result2.length - leftpadding;
-              byte[] result4 = new byte [uncipherlength];
+              System.out.println("uncipherlength :"+leftpadding);
+              int uncipherlength =result2.length- leftpadding;;
+              byte[] result4 = new byte [300];
               System.arraycopy(result2, 0, result4, 0, uncipherlength);
-              writeOutputFile(result4, typeINS);
+              if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
+                b64toServer = new String(result4);
+              }
             }
             else{
               System.out.println("Wrong key to decipher");
             }
           }
 
-          if (typeINS==CIPHERFILE) {
-            writeOutputFile(result2, typeINS);
+
+          if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
+            for (int i=0;i<result2.length ;i++ ) {
+              System.out.print(" "+result2[i]);
+            }
+            System.out.print("\nfin res 3\n");
+
+             encoder = new BASE64Encoder();
+             b64toServer = encoder.encode(result2).replaceAll(System.getProperty("line.separator"),"");
           }
 
-        }catch(FileNotFoundException e){
-          System.out.println(e.getMessage());
         }catch(IOException e){
           System.out.println(e.getMessage());
         }
+        System.out.println(b64toServer);
+
+      return b64toServer;
     }
-    String readKeyboard() {
-    		String result = null;
 
-    		try {
-    			BufferedReader input = new BufferedReader( new InputStreamReader( System.in ) );
-    			result = input.readLine();
-    		} catch( Exception e ) {}
 
-    		return result;
+    String cipher(byte typeINS, String message){
+        String toSend="";
+        int toDo = checkMsg(message);
+
+        switch(toDo){
+          case 1:
+            toSend =sendtoCard(typeINS,message);
+            break;
+          case 0:
+            System.out.print(message);
+            break;
+          default:
+            break;
+        }
+
+        return toSend;
+    }
+
+    // void writeOutputFile(byte [] result2, byte typeINS){
+    //   try{
+    //     FileOutputStream fop = null;
+    //     File file1;
+    //     if (typeINS==INS_DES_ECB_NOPAD_ENC) {
+    //         file1 = new File("ciphered.txt");
+    //     }else{
+    //         file1 = new File("unciphered.txt");
+    //     }
+    //     fop = new FileOutputStream(file1);
+    //
+    //     if (!file1.exists()) {
+    //       file1.createNewFile();
+    //     }
+    //     fop.write(result2);
+    //     fop.flush();
+    //     fop.close();
+    //   }catch(FileNotFoundException e){
+    //     System.out.println(e.getMessage());
+    //   }catch(IOException e){
+    //     System.out.println(e.getMessage());
+    //   }
+    // }
+    public int checkMsg(String message){
+      String[] messageSplit = new String[300];
+      messageSplit = message.split(" ");
+
+      if(message.startsWith("/")){
+        // switch(messageSplit[0]){
+          // case "/list":
+          //   list();
+          //   break;
+          // case "/quit":
+          //   quit();
+          //   break;
+          // case "/sendMsg":
+          //   sendMsg(messageSplit);
+          //   break;
+          // case "/sendFile":
+          // //encoder les fichiers en base64
+          //   sendFile(messageSplit[1], messageSplit[2]);
+          //   break;
+          // case "/help":
+          //   help();
+          //   break;
+          // case "/?":
+          //   help();
+          //   break;
+        //   default:
+        //     break;
+        // }
+      }
+      else{
+        return 1;
+      }
+      return 0;
     }
 
     public boolean sendPubKey(){
@@ -413,11 +575,11 @@ public class TheClient extends Thread{
           consoleVersResOutput.println(message);
           message = resVersConsoleInput.readLine();
 
-          if(message.equals("ok")){
-            return "ok";
+          if(message.equals("/ok")){
+            return "/ok";
           }
-          if (message.equals("chall")) {
-            return "chall";
+          if (message.equals("/chall")) {
+            return "/chall";
           }
 
      }catch(IOException e){
@@ -446,15 +608,17 @@ public class TheClient extends Thread{
     boolean loop1 = true;
     while(loop1){
       String cmd = cmd();
-      if (cmd.equals("ok")){
+      if (cmd.equals("/ok")){
         sendPubKey();
         loop1=false;
       }
-      if (cmd.equals("chall")) {
+      if (cmd.equals("/chall")) {
+        System.out.println("before sendchall ");
         sendChall();
         try{
           String message = resVersConsoleInput.readLine();
-          if (message.equals("Challok")) {
+          if (message.equals("/Challok")) {
+
             loop1=false;
           }
         }catch(IOException e){
@@ -469,7 +633,7 @@ public class TheClient extends Thread{
       while(loop){
         String message="";
         message = resVersConsoleInput.readLine();
-        cipher(INS_DES_ECB_NOPAD_DEC);
+        message = cipher(INS_DES_ECB_NOPAD_DEC, message);
         resVersConsoleOutput.println(message);
       }
     }catch( IOException e ) {

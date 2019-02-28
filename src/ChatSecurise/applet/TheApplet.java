@@ -13,6 +13,7 @@ public class TheApplet extends Applet {
 	private final static byte INS_DES_ECB_NOPAD_DEC           	= (byte)0x21;
 
 	// cipher instances
+	private Cipher cRSA_NO_PAD;
 	private Cipher cDES_ECB_NOPAD_enc, cDES_ECB_NOPAD_dec;
 	// key objects
 	private KeyPair keyPair;

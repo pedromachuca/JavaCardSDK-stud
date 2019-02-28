@@ -78,12 +78,12 @@ public class ServiceChat extends Thread{
       resSearch=search(listUser, username);
 
       if (resSearch>=0) {
-        output.println("chall");
+        output.println("/chall");
         challenge();
         auth = true;
       }
       else{
-        output.println("ok");
+        output.println("/ok");
         String encodedPublicKey = "";
         encodedPublicKey = askInput();
         decodePub(encodedPublicKey);
@@ -127,7 +127,7 @@ public class ServiceChat extends Thread{
           }
       }
       if (compteur==128) {
-          output.println("Challok");
+          output.println("/Challok");
       }
 
 
@@ -213,10 +213,11 @@ public class ServiceChat extends Thread{
       File file = new File(fileName);
       BufferedReader br;
       String st;
-
+      PrintStream usertosend;
+      usertosend = database.get(user);
          br = new BufferedReader(new FileReader(file));
         while ((st = br.readLine()) != null){
-          System.out.println(st);
+          usertosend.println(st);
         }
     }catch(IOException e){
       System.out.println(e);
@@ -277,7 +278,7 @@ public class ServiceChat extends Thread{
     String message;
     int cmd=0;
     try{
-      output.println("Vous pouvez maintenant chatter :");
+      output.println("/Vous pouvez maintenant chatter :");
       while(loop){
         message = input.readLine();
         parseMsg(message);
@@ -289,7 +290,8 @@ public class ServiceChat extends Thread{
 
   public synchronized void broadcast(String message){
       for (PrintStream outThread:outputs) {
-        outThread.println( username+" :"+message);
+        // outThread.println( username+" :"+message);
+        outThread.println(message);
       }
   }
   //outputs.foreach((n) ->  n.println( "Message :"+message));
