@@ -296,16 +296,23 @@ public class TheClient extends Thread{
            int leftpadding = (int)DATAMAXSIZE -((int)lengthM%DATAMAXSIZE);
            System.out.println("DMS : "+DATAMAXSIZE);
            System.out.println("LP : "+leftpadding);
-           System.out.println("length : "+lengthM);
+           System.out.println("lengthM : "+lengthM);
            if (typeINS==INS_DES_ECB_NOPAD_DEC){
              totalLength = (int)lengthM;
            }
            else{
                totalLength =(int)lengthM+(int)leftpadding;
            }
+           boolean check = false;
            if (leftpadding%8==0&&typeINS==INS_DES_ECB_NOPAD_ENC) {
              DATAMAXSIZE = DATAMAXSIZE+8;
+             totalLength =DATAMAXSIZE;
+             check = true;
            }
+           System.out.println("DMS : "+DATAMAXSIZE);
+           System.out.println("LP : "+leftpadding);
+           System.out.println("totalLength : "+totalLength);
+
            byte[] result = new byte[(int)DATAMAXSIZE];
            int compteur = 0;
            int data = 0;
@@ -325,14 +332,15 @@ public class TheClient extends Thread{
 
              System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
 
-             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE){
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE&&check==false){
                for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
                    result[i]=(byte)leftpadding;
                  }
              }
-             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data==DATAMAXSIZE){
-               for (int i=DATAMAXSIZE;i<DATAMAXSIZE+leftpadding;i++ ) {
-                   result[i]=(byte)leftpadding;
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE&&check==true){
+               for (int i=DATAMAXSIZE-8;i<DATAMAXSIZE;i++ ) {
+                   System.out.println("leftpadding "+leftpadding);
+                   result[i]=(byte)0x08;
                  }
              }
 
@@ -404,29 +412,6 @@ public class TheClient extends Thread{
         return toSend;
     }
 
-    // void writeOutputFile(byte [] result2, byte typeINS){
-    //   try{
-    //     FileOutputStream fop = null;
-    //     File file1;
-    //     if (typeINS==INS_DES_ECB_NOPAD_ENC) {
-    //         file1 = new File("ciphered.txt");
-    //     }else{
-    //         file1 = new File("unciphered.txt");
-    //     }
-    //     fop = new FileOutputStream(file1);
-    //
-    //     if (!file1.exists()) {
-    //       file1.createNewFile();
-    //     }
-    //     fop.write(result2);
-    //     fop.flush();
-    //     fop.close();
-    //   }catch(FileNotFoundException e){
-    //     System.out.println(e.getMessage());
-    //   }catch(IOException e){
-    //     System.out.println(e.getMessage());
-    //   }
-    // }
     public int checkMsg(String message){
       String[] messageSplit = new String[300];
       messageSplit = message.split(" ");
