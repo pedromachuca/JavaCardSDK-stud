@@ -258,18 +258,17 @@ public class TheClient extends Thread{
         String b64toServer="";
         int lengthM = 0;
         byte [] messageByte = new byte[DATAMAXSIZE];
-        System.out.println(message);
-        
+
         try{
           if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
             decoder = new BASE64Decoder();
 
               messageByte = decoder.decodeBuffer(message);
-              System.out.print("\nDEC\n");
-              for (int i=0;i<messageByte.length ;i++ ) {
-                System.out.print(" "+messageByte[i]);
-              }
-              System.out.print("\nDEC\n");
+              // System.out.print("\nDEC\n");
+              // for (int i=0;i<messageByte.length ;i++ ) {
+              //   System.out.print(" "+messageByte[i]);
+              // }
+              // System.out.print("\nDEC\n");
 
              lengthM= messageByte.length;
              System.out.println(DATAMAXSIZE);
@@ -382,7 +381,6 @@ public class TheClient extends Thread{
         }catch(IOException e){
           System.out.println(e.getMessage());
         }
-        System.out.println(b64toServer);
 
       return b64toServer;
     }
