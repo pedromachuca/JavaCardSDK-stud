@@ -205,52 +205,7 @@ public class TheClient extends Thread{
     		System.out.println( "Applet selected\n" );
 
     }
-    // public String sendtoCard(byte typeINS, String message){
-    //
-    //   BASE64Decoder decoder;
-    //   BASE64Encoder encoder;
-    //   String b64toServer="";
-    //   int lengthM = message.length();
-    //   byte [] messageByte = new byte[lengthM];
-    //
-    //   try{
-    //
-    //     if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
-    //       decoder = new BASE64Decoder();
-    //       messageByte = decoder.decodeBuffer(message);
-    //     }
-    //     else{
-    //       messageByte = message.getBytes();
-    //     }
-    //     byte[] cmd_part = {CLA, typeINS, P1, P2, (byte)lengthM};
-    //     int size_part = cmd_part.length;
-    //
-    //     int totalLength =lengthM+size_part;
-    //     byte[] cmd_1= new byte[totalLength+1];
-    //
-    //     System.arraycopy(cmd_part, 0, cmd_1, 0, size_part);
-    //     System.arraycopy(messageByte, 0, cmd_1, size_part, lengthM);
-    //     cmd_1[totalLength]=(byte)lengthM;
-    //
-    //     CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
-    //     System.out.println("Sending to card...");
-    //     displayAPDU(cmd2);
-    //     ResponseAPDU resp = this.sendAPDU( cmd2, DISPLAY );
-    //     byte[] recved = resp.getBytes();
-    //
-    //     byte[] afterCard = new byte[128];
-    //     System.arraycopy(recved, 0, afterCard, 0, lengthM);
-    //
-    //     if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
-    //       encoder = new BASE64Encoder();
-    //       b64toServer = encoder.encode(afterCard).replaceAll(System.getProperty("line.separator"),"");
-    //     }
-    //
-    //   }catch(Exception e){
-    //     System.out.println("Problem with sendtocard :"+e.getMessage());
-    //   }
-    //   return b64toServer;
-    // }
+
     public String sendtoCard(byte typeINS, String message){
 
         BASE64Decoder decoder;
@@ -264,11 +219,6 @@ public class TheClient extends Thread{
             decoder = new BASE64Decoder();
 
               messageByte = decoder.decodeBuffer(message);
-              // System.out.print("\nDEC\n");
-              // for (int i=0;i<messageByte.length ;i++ ) {
-              //   System.out.print(" "+messageByte[i]);
-              // }
-              // System.out.print("\nDEC\n");
 
              lengthM= messageByte.length;
              System.out.println(DATAMAXSIZE);
