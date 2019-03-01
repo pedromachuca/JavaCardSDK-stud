@@ -187,6 +187,8 @@ public class ServiceChat extends Thread{
 
   public void quit(){
     connectedUser.remove(username);
+    database.remove(username);
+    outputs.remove(output);
     try{
       output.close();
       input.close();
@@ -198,14 +200,25 @@ public class ServiceChat extends Thread{
   }
   public void sendMsg(String[] message){
     PrintStream usertosend;
-    System.out.println(" message "+message.length);
-    usertosend = database.get(message[1]);
-    usertosend.print(username+" : "+message[1]);
-
-    for (int i=2;i<message.length;i++) {
-        usertosend.print(" "+message[i]);
+    for (int i=0;i<message.length;i++) {
+        System.out.println(i+" "+message[i]);
     }
-      usertosend.print("\n");
+    System.out.println(" db "+database);
+    System.out.println(Arrays.asList(database));
+    System.out.println(outputs);
+    System.out.println(" message "+message.length);
+    System.out.println(" message[1] "+message[1]);
+    System.out.println(" message[2] "+message[2]);
+    try{
+      usertosend = database.get(message[1]);
+      System.out.println("usertosend :"+usertosend);
+      usertosend.println("@"+username+": "+message[2]);
+    }catch(Exception e){
+      e.printStackTrace();
+    }
+
+    System.out.println("@"+username+": "+message[2]);
+    //   usertosend.print("\n");
   }
 
   public void sendFile(String user, String fileName){
@@ -225,25 +238,28 @@ public class ServiceChat extends Thread{
   }
 
   public void help(){
-    output.println("Liste des commandes disponibles :\n/list : donne la liste de utilisateurs\n/quit : permet de quitter le chat\n/sendMsg <user> <msg> : pour envoyer un message prive");
-    output.println("/sendFile <user> <fileName> : pour envoyer un fichier en prive\n/help : pour afficher la liste des commandes\n/? : pour afficher la liste des commandes");
+    byte [] listHelp = "\n Liste des commandes disponibles :\n/list : donne la liste de utilisateurs\n/quit : permet de quitter le chat\n/sendMsg <user> <msg> : pour envoyer un message prive \n /sendFile <user> <fileName> : pour envoyer un fichier en prive\n/help : pour afficher la liste des commandes\n/? : pour afficher la liste des commandes".getBytes();
+    String encodedString = Base64.getEncoder().encodeToString(listHelp);
+    output.println("@help "+encodedString );
   }
 
-
-  public void updatedb(){
-    for (int i = 0 ; i < listUser.size() ; i++) {
-      database.put(listUser.get(i), outputs.get(i));
-    }
-    System.out.println(database);
+  //
+  // public void updatedb(){
+  //   for (int i = 0 ; i < listUser.size() ; i++) {
+  //     database.put(listUser.get(i), outputs.get(i));
+  //   }
+  //   System.out.println(database);
+  // }
+  public synchronized void updatedb(){
+    database.put(username, output);
   }
-
 
   public void parseMsg(String message){
     String[] messageSplit = new String[300];
     messageSplit = message.split(" ");
-    // for (int i=0;i<messageSplit.length ;i++ ) {
-    //   System.out.println("parseMsg :"+messageSplit[i] );
-    // }
+    for (int i=0;i<messageSplit.length ;i++ ) {
+      System.out.println("parseMsg :"+messageSplit[i] );
+    }
     if(message.startsWith("/")){
       switch(messageSplit[0]){
         case "/list":
@@ -296,7 +312,6 @@ public class ServiceChat extends Thread{
   public synchronized void broadcast(String message){
       for (PrintStream outThread:outputs) {
         outThread.println("/broadcast "+username+": "+message);
-        // outThread.println(message);
       }
   }
   //outputs.foreach((n) ->  n.println( "Message :"+message));

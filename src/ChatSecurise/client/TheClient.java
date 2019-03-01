@@ -87,8 +87,12 @@ public class TheClient extends Thread{
       try{
         String message="";
         while(loop){
+          System.out.println("before cipher");
           message = consoleVersResInput.readLine();
+          System.out.println("before readliner");
           message= cipher(INS_DES_ECB_NOPAD_ENC, message);
+          System.out.println("");
+
           consoleVersResOutput.println(message);
           if (message.equals("/quit")) {
               consoleVersResInput.close();
@@ -339,6 +343,8 @@ public class TheClient extends Thread{
         }catch(IOException e){
           System.out.println(e.getMessage());
         }
+        System.out.println("b64t :"+b64toServer);
+
 
       return b64toServer;
     }
@@ -348,24 +354,54 @@ public class TheClient extends Thread{
         String toSend="";
         int toDo = checkMsg(message);
         String[] messageSplit = new String[300];
+        String[] messageSplit1 = new String[300];
+
         messageSplit = message.split(" ");
-        // for (int i=0;i<messageSplit.length ;i++ ) {
-        //   System.out.println("Cipher :"+messageSplit[i] );
-        // }
+        if (messageSplit.length>=2) {
+          messageSplit1[0] =messageSplit[0];
+          messageSplit1[1] =messageSplit[1];
+          messageSplit1[2] ="";
+        }
+
+        for (int i=2;i<messageSplit.length ;i++ ) {
+          messageSplit1[2] +=messageSplit[i]+" ";
+        }
+        for (int i=0;i<6 ;i++ ) {
+          System.out.println("Cipher :"+messageSplit1[i] );
+        }
 
         switch(toDo){
+          //tosend Broadcast
           case 1:
             toSend =sendtoCard(typeINS,message);
             toSend = "/broadcast "+toSend;
             break;
+          //receive broadcast
           case 2:
             toSend =sendtoCard(typeINS,messageSplit[2]);
             toSend = messageSplit[1]+toSend;
             break;
+          //to send /sendMsg
           case 3:
-            toSend =sendtoCard(typeINS,messageSplit[2]);
-            toSend = messageSplit[1]+toSend;
+            toSend =sendtoCard(typeINS,messageSplit1[2]);
+            toSend = messageSplit[0]+" "+messageSplit[1]+" "+toSend;
+            System.out.println("toSend :"+toSend );
             break;
+          //receive /sendMsg
+          case 4:
+            System.out.println("messageSplit[1] :"+messageSplit[1] );
+            toSend =sendtoCard(typeINS,messageSplit[1]);
+            toSend = messageSplit[0]+" "+toSend;
+            System.out.println("toSend :"+toSend );
+            break;
+          //receive /quit
+          case 5:
+            toSend ="/quit";
+            break;
+          case 6:
+            toSend ="/help";
+            break;
+          //case default
           case 0:
             System.out.print(message);
             break;
@@ -379,10 +415,10 @@ public class TheClient extends Thread{
     public int checkMsg(String message){
       String[] messageSplit = new String[300];
       messageSplit = message.split(" ");
-      //
-      // for (int i=0;i<messageSplit.length ;i++ ) {
-      //   System.out.println("checkMsg :"+messageSplit[i] );
-      // }
+
+      for (int i=0;i<messageSplit.length ;i++ ) {
+        System.out.println("checkMsg :"+messageSplit[i] );
+      }
 
       if(message.startsWith("/")){
         if (messageSplit[0].equals("/broadcast")) {
@@ -391,29 +427,18 @@ public class TheClient extends Thread{
         else if (messageSplit[0].equals("/sendMsg")) {
           return 3;
         }
-        // switch(messageSplit[0]){
-          // case "/list":
-          //   list();
-          //   break;
-          // case "/quit":
-          //   quit();
-          //   break;
-          // case "/sendMsg":
-          //   sendMsg(messageSplit);
-          //   break;
-          // case "/sendFile":
-          // //encoder les fichiers en base64
-          //   sendFile(messageSplit[1], messageSplit[2]);
-          //   break;
-          // case "/help":
-          //   help();
-          //   break;
-          // case "/?":
-          //   help();
-          //   break;
-        //   default:
-        //     break;
-        // }
+        else if (messageSplit[0].equals("/quit")) {
+          return 5;
+        }
+        else if (messageSplit[0].equals("/help")) {
+          return 6;
+        }
+        else if (messageSplit[0].equals("@help")) {
+          System.out.println(message);
+        }
+      }
+      else if ( message.startsWith("@")) {
+        return 4;
       }
       else{
         return 1;
@@ -589,8 +614,13 @@ public class TheClient extends Thread{
     try{
       while(loop){
         String message="";
+        System.out.println("test");
+
         message = resVersConsoleInput.readLine();
+        System.out.println("DECIPHer : "+message);
         message = cipher(INS_DES_ECB_NOPAD_DEC, message);
+        System.out.println("After DECIPHer : "+message);
+
         resVersConsoleOutput.println(message);
       }
     }catch( IOException e ) {
