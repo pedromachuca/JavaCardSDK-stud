@@ -221,8 +221,8 @@ public class TheClient extends Thread{
               messageByte = decoder.decodeBuffer(message);
 
              lengthM= messageByte.length;
-             System.out.println(DATAMAXSIZE);
-             System.out.println(lengthM);
+             // System.out.println(DATAMAXSIZE);
+             // System.out.println(lengthM);
           }
           else{
             messageByte = message.getBytes();
@@ -244,8 +244,8 @@ public class TheClient extends Thread{
           }
 
            int leftpadding = (int)DATAMAXSIZE -((int)lengthM%DATAMAXSIZE);
-           System.out.println("DMS : "+DATAMAXSIZE);
-           System.out.println("LP : "+leftpadding);
+           // System.out.println("DMS : "+DATAMAXSIZE);
+           // System.out.println("LP : "+leftpadding);
            System.out.println("lengthM : "+lengthM);
            if (typeINS==INS_DES_ECB_NOPAD_DEC){
              totalLength = (int)lengthM;
@@ -259,9 +259,9 @@ public class TheClient extends Thread{
              totalLength =DATAMAXSIZE;
              check = true;
            }
-           System.out.println("DMS : "+DATAMAXSIZE);
-           System.out.println("LP : "+leftpadding);
-           System.out.println("totalLength : "+totalLength);
+           // System.out.println("DMS : "+DATAMAXSIZE);
+           // System.out.println("LP : "+leftpadding);
+           // System.out.println("totalLength : "+totalLength);
 
            byte[] result = new byte[(int)DATAMAXSIZE];
            int compteur = 0;
@@ -289,7 +289,7 @@ public class TheClient extends Thread{
              }
              if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE&&check==true){
                for (int i=DATAMAXSIZE-8;i<DATAMAXSIZE;i++ ) {
-                   System.out.println("leftpadding "+leftpadding);
+                   // System.out.println("leftpadding "+leftpadding);
                    result[i]=(byte)0x08;
                  }
              }
@@ -312,7 +312,7 @@ public class TheClient extends Thread{
           if (typeINS==INS_DES_ECB_NOPAD_DEC) {
             if (leftpadding>0){
 
-              System.out.println("uncipherlength :"+leftpadding);
+              // System.out.println("uncipherlength :"+leftpadding);
               int uncipherlength =result2.length- leftpadding;;
               byte[] result4 = new byte [300];
               System.arraycopy(result2, 0, result4, 0, uncipherlength);
@@ -327,10 +327,10 @@ public class TheClient extends Thread{
 
 
           if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
-            for (int i=0;i<result2.length ;i++ ) {
-              System.out.print(" "+result2[i]);
-            }
-            System.out.print("\nfin res 3\n");
+            // for (int i=0;i<result2.length ;i++ ) {
+            //   System.out.print(" "+result2[i]);
+            // }
+            // System.out.print("\nfin res 3\n");
 
              encoder = new BASE64Encoder();
              b64toServer = encoder.encode(result2).replaceAll(System.getProperty("line.separator"),"");
@@ -347,10 +347,24 @@ public class TheClient extends Thread{
     String cipher(byte typeINS, String message){
         String toSend="";
         int toDo = checkMsg(message);
+        String[] messageSplit = new String[300];
+        messageSplit = message.split(" ");
+        // for (int i=0;i<messageSplit.length ;i++ ) {
+        //   System.out.println("Cipher :"+messageSplit[i] );
+        // }
 
         switch(toDo){
           case 1:
             toSend =sendtoCard(typeINS,message);
+            toSend = "/broadcast "+toSend;
+            break;
+          case 2:
+            toSend =sendtoCard(typeINS,messageSplit[2]);
+            toSend = messageSplit[1]+toSend;
+            break;
+          case 3:
+            toSend =sendtoCard(typeINS,messageSplit[2]);
+            toSend = messageSplit[1]+toSend;
             break;
           case 0:
             System.out.print(message);
@@ -365,8 +379,18 @@ public class TheClient extends Thread{
     public int checkMsg(String message){
       String[] messageSplit = new String[300];
       messageSplit = message.split(" ");
+      //
+      // for (int i=0;i<messageSplit.length ;i++ ) {
+      //   System.out.println("checkMsg :"+messageSplit[i] );
+      // }
 
       if(message.startsWith("/")){
+        if (messageSplit[0].equals("/broadcast")) {
+          return 2;
+        }
+        else if (messageSplit[0].equals("/sendMsg")) {
+          return 3;
+        }
         // switch(messageSplit[0]){
           // case "/list":
           //   list();

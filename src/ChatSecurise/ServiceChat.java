@@ -241,7 +241,9 @@ public class ServiceChat extends Thread{
   public void parseMsg(String message){
     String[] messageSplit = new String[300];
     messageSplit = message.split(" ");
-
+    // for (int i=0;i<messageSplit.length ;i++ ) {
+    //   System.out.println("parseMsg :"+messageSplit[i] );
+    // }
     if(message.startsWith("/")){
       switch(messageSplit[0]){
         case "/list":
@@ -262,6 +264,9 @@ public class ServiceChat extends Thread{
           break;
         case "/?":
           help();
+          break;
+        case "/broadcast":
+          broadcast(messageSplit[1]);
           break;
         default:
           break;
@@ -290,8 +295,8 @@ public class ServiceChat extends Thread{
 
   public synchronized void broadcast(String message){
       for (PrintStream outThread:outputs) {
-        // outThread.println( username+" :"+message);
-        outThread.println(message);
+        outThread.println("/broadcast "+username+": "+message);
+        // outThread.println(message);
       }
   }
   //outputs.foreach((n) ->  n.println( "Message :"+message));
