@@ -177,10 +177,14 @@ public class ServiceChat extends Thread{
 
   public void list(){
     int id = 0;
-    for (String name:listUser) {
-    output.println( " User "+id+" : "+name);
+    String listUser="";
+    for (String name:connectedUser) {
+      listUser+="\nUser" +id+" : "+name+"\n";
       id+=1;
     }
+    String encodedString = Base64.getEncoder().encodeToString(listUser.getBytes());
+    output.println( "@list "+encodedString);
+
   }
 
 
@@ -237,7 +241,7 @@ public class ServiceChat extends Thread{
   }
 
   public void help(){
-    byte [] listHelp = "\n Liste des commandes disponibles :\n/list : donne la liste de utilisateurs\n/quit : permet de quitter le chat\n/sendMsg <user> <msg> : pour envoyer un message prive \n /sendFile <user> <fileName> : pour envoyer un fichier en prive\n/help : pour afficher la liste des commandes\n/? : pour afficher la liste des commandes".getBytes();
+    byte [] listHelp = "\nListe des commandes disponibles :\n/list : donne la liste de utilisateurs\n/quit : permet de quitter le chat\n/sendMsg <user> <msg> : pour envoyer un message prive \n/sendFile <user> <fileName> : pour envoyer un fichier en prive\n/help : pour afficher la liste des commandes\n/? : pour afficher la liste des commandes".getBytes();
     String encodedString = Base64.getEncoder().encodeToString(listHelp);
     output.println("@help "+encodedString );
   }

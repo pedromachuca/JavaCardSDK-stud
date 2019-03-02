@@ -209,6 +209,18 @@ public class TheClient extends Thread{
     		System.out.println( "Applet selected\n" );
 
     }
+    public String decodeb64(String message){
+      BASE64Decoder decoder;
+      byte [] messageByte = new byte[message.length()];
+      String b64toClient="";
+      try{
+        decoder = new BASE64Decoder();
+        messageByte = decoder.decodeBuffer(message);
+        b64toClient = new String(messageByte);
+      }catch(Exception e){e.printStackTrace();}
+
+      return b64toClient;
+    }
     public String sendtoCard(byte typeINS, String message){
 
       BASE64Decoder decoder;
@@ -394,8 +406,12 @@ public class TheClient extends Thread{
           case 6:
             toSend ="/help";
             break;
-          //case default
+          case 7:
+            toSend ="/list";
+            break;
+        //case default
           case 0:
+            message = decodeb64(messageSplit[1]);
             System.out.print(message);
             break;
           default:
@@ -423,15 +439,23 @@ public class TheClient extends Thread{
         else if (messageSplit[0].equals("/quit")) {
           return 5;
         }
-        else if (messageSplit[0].equals("/help")) {
+        else if (messageSplit[0].equals("/help")||messageSplit[0].equals("/?")) {
           return 6;
         }
-        else if (messageSplit[0].equals("@help")) {
-          System.out.println(message);
+        else if (messageSplit[0].equals("/list")) {
+          return 7;
         }
       }
       else if ( message.startsWith("@")) {
-        return 4;
+        if ( message.startsWith("@help")) {
+          return 0;
+        }
+        if ( message.startsWith("@list")) {
+          return 0;
+        }
+        else {
+          return 4;
+        }
       }
       else{
         return 1;
