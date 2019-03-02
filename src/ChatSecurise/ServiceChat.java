@@ -224,20 +224,40 @@ public class ServiceChat extends Thread{
     //   usertosend.print("\n");
   }
 
-  public void sendFile(String user, String fileName){
+  public void sendFile(String user, String filename, String filedata){
+    PrintStream usertosend;
+    System.out.println("user"+user);
+    System.out.println("fileName"+filedata);
+
+    System.out.println(" db "+database);
+    System.out.println(Arrays.asList(database));
+    System.out.println(outputs);
+    // System.out.println(" message "+message.length);
+    // System.out.println(" message[1] "+message[1]);
+    // System.out.println(" message[2] "+message[2]);
     try{
-      File file = new File(fileName);
-      BufferedReader br;
-      String st;
-      PrintStream usertosend;
       usertosend = database.get(user);
-         br = new BufferedReader(new FileReader(file));
-        while ((st = br.readLine()) != null){
-          usertosend.println(st);
-        }
-    }catch(IOException e){
-      System.out.println(e);
+      System.out.println("usertosend :"+usertosend);
+      usertosend.println("@sendFile "+username+" "+filename+" "+filedata);
+    }catch(Exception e){
+      e.printStackTrace();
     }
+
+    // System.out.println("@"+username+": "+message[2]);
+
+    // try{
+    //   File file = new File(fileName);
+    //   BufferedReader br;
+    //   String st;
+    //   PrintStream usertosend;
+    //   usertosend = database.get(user);
+    //      br = new BufferedReader(new FileReader(file));
+    //     while ((st = br.readLine()) != null){
+    //       usertosend.println(st);
+    //     }
+    // }catch(IOException e){
+    //   System.out.println(e);
+    // }
   }
 
   public void help(){
@@ -276,7 +296,7 @@ public class ServiceChat extends Thread{
           break;
         case "/sendFile":
         //encoder les fichiers en base64
-          sendFile(messageSplit[1], messageSplit[2]);
+          sendFile(messageSplit[1], messageSplit[2], messageSplit[3]);
           break;
         case "/help":
           help();

@@ -409,6 +409,21 @@ public class TheClient extends Thread{
           case 7:
             toSend ="/list";
             break;
+          //send /sendFile
+          case 8:
+            String tmp =getFile(messageSplit1[2]);
+            toSend =sendtoCard(typeINS,tmp);
+            toSend = messageSplit[0]+" "+messageSplit[1]+" "+messageSplit1[2]+toSend;
+            System.out.println("toSend :"+toSend );
+            break;
+          //receive file
+          case 9:
+            System.out.println("messageSplit[1] :"+messageSplit[1] );
+            toSend =sendtoCard(typeINS,messageSplit[3]);
+            writeFile(toSend, messageSplit[2]);
+            toSend = messageSplit[1]+" sent you the file : "+messageSplit[2];
+            System.out.println(messageSplit[1]+"toSend :"+toSend );
+            break;
         //case default
           case 0:
             message = decodeb64(messageSplit[1]);
@@ -445,13 +460,19 @@ public class TheClient extends Thread{
         else if (messageSplit[0].equals("/list")) {
           return 7;
         }
+        else if (messageSplit[0].equals("/sendFile")) {
+          return 8;
+        }
       }
       else if ( message.startsWith("@")) {
         if ( message.startsWith("@help")) {
           return 0;
         }
-        if ( message.startsWith("@list")) {
+        else if ( message.startsWith("@list")) {
           return 0;
+        }
+        else if ( message.startsWith("@sendFile")) {
+          return 9;
         }
         else {
           return 4;
@@ -461,6 +482,50 @@ public class TheClient extends Thread{
         return 1;
       }
       return 0;
+    }
+
+    public String getFile(String filename){
+
+      File file;
+      String filedata = "";
+      try{
+        BufferedReader reader = new BufferedReader(new FileReader(filename));
+        StringBuilder stringBuilder = new StringBuilder();
+        String line = null;
+        String ls = System.getProperty("line.separator");
+        while ((line = reader.readLine()) != null) {
+        	stringBuilder.append(line);
+        	stringBuilder.append(ls);
+        }
+        // delete the last new line separator
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        reader.close();
+
+        filedata = stringBuilder.toString();
+      }catch(IOException e){
+        System.out.println(e);
+      }
+      System.out.println(filedata);
+      return filedata;
+    }
+
+    public void writeFile(String filedata, String filename){
+      OutputStream os = null;
+      System.out.println("\nFILEDATA :"+ filedata);
+
+        try {
+            // os = new FileOutputStream(new File(filename));
+            os = new FileOutputStream(new File("AfterVictory.gif"));
+            os.write(filedata.getBytes(), 0, filedata.length());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally{
+            try {
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public boolean sendPubKey(){
