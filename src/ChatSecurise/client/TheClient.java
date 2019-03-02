@@ -495,10 +495,10 @@ public class TheClient extends Thread{
         String ls = System.getProperty("line.separator");
         while ((line = reader.readLine()) != null) {
         	stringBuilder.append(line);
-        	stringBuilder.append(ls);
+        	// stringBuilder.append(ls);
         }
         // delete the last new line separator
-        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        // stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         reader.close();
 
         filedata = stringBuilder.toString();
@@ -512,11 +512,12 @@ public class TheClient extends Thread{
     public void writeFile(String filedata, String filename){
       OutputStream os = null;
       System.out.println("\nFILEDATA :"+ filedata);
-
+      int cursor;
         try {
             // os = new FileOutputStream(new File(filename));
-            os = new FileOutputStream(new File("AfterVictory.gif"));
+            os = new FileOutputStream(new File("RESULT.png"));
             os.write(filedata.getBytes(), 0, filedata.length());
+        
         } catch (IOException e) {
             e.printStackTrace();
         }finally{
