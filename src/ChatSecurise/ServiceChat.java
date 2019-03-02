@@ -14,7 +14,6 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-// import sun.misc.BASE64Encoder;
 
 public class ServiceChat extends Thread{
 

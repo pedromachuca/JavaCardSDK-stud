@@ -9,7 +9,7 @@ import java.security.Security;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.RSAPrivateKeySpec;
 import javax.crypto.Cipher;
-import java.lang.Math;
+
 import java.net.*;
 import java.io.*;
 import java.util.Date;
@@ -209,136 +209,143 @@ public class TheClient extends Thread{
     		System.out.println( "Applet selected\n" );
 
     }
+
     public String sendtoCard(byte typeINS, String message){
 
-      BASE64Decoder decoder;
-      BASE64Encoder encoder;
-      String b64toServer="";
-      int totalLength = 0;
-      int leftpadding =0;
-      int lengthRes = 0;
+        BASE64Decoder decoder;
+        BASE64Encoder encoder;
+        String b64toServer="";
+        int lengthM = 0;
+        byte [] messageByte = new byte[DATAMAXSIZE];
 
-      try{
-        byte [] messageByte = new byte[message.length()];
-
+        try{
           if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
             decoder = new BASE64Decoder();
-            messageByte = decoder.decodeBuffer(message);
-            totalLength= messageByte.length;
-             System.out.println("DMS "+DATAMAXSIZE);
-             System.out.println("totalLength :"+totalLength);
+
+              messageByte = decoder.decodeBuffer(message);
+
+             lengthM= messageByte.length;
+             System.out.println(DATAMAXSIZE);
+             System.out.println(lengthM);
           }
           else{
             messageByte = message.getBytes();
-            totalLength= messageByte.length;
-          }
-          System.out.println("totalLength :"+totalLength);
-          if (totalLength >=248) {
-            DATAMAXSIZE = 248;
-            leftpadding = (int)totalLength%DATAMAXSIZE;
-            lengthRes =(int)Math.ceil((float)totalLength/8)*8;
-          }
-          else if (totalLength<248) {
-            float div = (float)totalLength/8;
-            DATAMAXSIZE = (int)Math.ceil(div)*8;
-            leftpadding = (int)DATAMAXSIZE - totalLength;
-            lengthRes = DATAMAXSIZE;
-          }
-          if (totalLength<248&&totalLength%8==0&&typeINS==INS_DES_ECB_NOPAD_ENC) {
-            DATAMAXSIZE = DATAMAXSIZE +8;
-            leftpadding=8;
-            lengthRes = lengthRes+8;
-            System.out.println("leftpadding : "+leftpadding);
-            System.out.println("inside DMS "+DATAMAXSIZE);
-          }
-          if (totalLength>248&&totalLength%8==0) {
-            lengthRes = lengthRes+8;
+            lengthM= messageByte.length;
           }
 
-         byte[] result = new byte[(int)DATAMAXSIZE];
-         int compteur = 0;
-         int data = 0;
+          int totalLength = 0;
 
-         byte[] result2 = new byte [lengthRes];
-         System.out.println("DMS "+DATAMAXSIZE);
-         System.out.println("totalLength :"+totalLength);
+          if (lengthM <248 && lengthM>8 && lengthM%8!=0 ) {
+             int rest = lengthM%8;
+             int toAdd = 8-rest;
+             DATAMAXSIZE = toAdd+lengthM;
+          }
+          if (lengthM<8) {
+            DATAMAXSIZE = 8;
+          }
+          if (lengthM%8==0) {
+            DATAMAXSIZE = lengthM;
+          }
 
-         InputStream inputstream = new ByteArrayInputStream(messageByte);
-
-         while(((data = inputstream.read(result)) >= 0) ){
-
-           if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE){
-             if (DATAMAXSIZE >=248 && compteur !=0) {
-               float div = (float)leftpadding/8;
-               DATAMAXSIZE = (int)Math.ceil(div)*8;
-               leftpadding = (int)DATAMAXSIZE - leftpadding;
-               if (leftpadding==0) {
-                 leftpadding = 8;
-                 DATAMAXSIZE = DATAMAXSIZE +8;
-               }
-             }
-             for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
-                 result[i]=(byte)leftpadding;
-               }
+           int leftpadding = (int)DATAMAXSIZE -((int)lengthM%DATAMAXSIZE);
+           System.out.println("DMS : "+DATAMAXSIZE);
+           System.out.println("LP : "+leftpadding);
+           System.out.println("lengthM : "+lengthM);
+           if (typeINS==INS_DES_ECB_NOPAD_DEC){
+             totalLength = (int)lengthM;
            }
+           else{
+               totalLength =(int)lengthM+(int)leftpadding;
+           }
+           boolean check = false;
+           if (leftpadding%8==0&&typeINS==INS_DES_ECB_NOPAD_ENC) {
+             DATAMAXSIZE = DATAMAXSIZE+8;
+             totalLength =DATAMAXSIZE;
+             check = true;
+           }
+           System.out.println("DMS : "+DATAMAXSIZE);
+           System.out.println("LP : "+leftpadding);
+           System.out.println("totalLength : "+totalLength);
 
-           byte[] cmd_part = {CLA, typeINS, P1, P2, (byte)DATAMAXSIZE};
+           byte[] result = new byte[(int)DATAMAXSIZE];
+           int compteur = 0;
+           int data = 0;
+           String ciphered = "";
 
-           int size_part = cmd_part.length;
+           byte[] result2 = new byte [totalLength];
+           InputStream inputstream = new ByteArrayInputStream(messageByte);
 
-           int lengthCmd =DATAMAXSIZE+size_part;
-           byte[] cmd_= new byte[lengthCmd+1];
+           while(((data = inputstream.read(result)) >= 0) ){
 
-           System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
-           System.arraycopy(result, 0, cmd_, size_part, DATAMAXSIZE);
+             byte[] cmd_part = {CLA, typeINS, P1, P2, (byte)DATAMAXSIZE};
 
-           cmd_ [lengthCmd]=(byte)DATAMAXSIZE;
+             int size_part = cmd_part.length;
 
-          CommandAPDU cmd1 = new CommandAPDU( cmd_ );
-          ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+             totalLength =DATAMAXSIZE+size_part;
+             byte[] cmd_= new byte[totalLength+1];
 
-          byte[] result1 =resp.getBytes();
+             System.arraycopy(cmd_part, 0, cmd_, 0, size_part);
 
-          if (typeINS==INS_DES_ECB_NOPAD_DEC){
-            leftpadding = (int)(result1[result1.length-3]&0xff);
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE&&check==false){
+               for (int i=DATAMAXSIZE-leftpadding;i<DATAMAXSIZE;i++ ) {
+                   result[i]=(byte)leftpadding;
+                 }
+             }
+             if (typeINS==INS_DES_ECB_NOPAD_ENC&&data!=DATAMAXSIZE&&check==true){
+               for (int i=DATAMAXSIZE-8;i<DATAMAXSIZE;i++ ) {
+                   // System.out.println("leftpadding "+leftpadding);
+                   result[i]=(byte)0x08;
+                 }
+             }
+
+             System.arraycopy(result, 0, cmd_, size_part, DATAMAXSIZE);
+             cmd_ [totalLength]=(byte)DATAMAXSIZE;
+
+            CommandAPDU cmd1 = new CommandAPDU( cmd_ );
+            ResponseAPDU resp =	this.sendAPDU( cmd1, DISPLAY );
+
+            byte[] result1 =resp.getBytes();
+
+            if (typeINS==INS_DES_ECB_NOPAD_DEC){
+              leftpadding = (int)(result1[result1.length-3]&0xff);
+            }
+            System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
+            compteur+=DATAMAXSIZE;
           }
-          System.arraycopy(result1, 0, result2, compteur, DATAMAXSIZE);
-          compteur+=DATAMAXSIZE;
-          if (typeINS==INS_DES_ECB_NOPAD_DEC&&(totalLength-compteur)<248) {
-            DATAMAXSIZE = (totalLength-compteur);
-          }
-        }
 
-        if (typeINS==INS_DES_ECB_NOPAD_DEC) {
-          if (leftpadding>0){
+          if (typeINS==INS_DES_ECB_NOPAD_DEC) {
+            if (leftpadding>0){
 
-            System.out.println("leftpadding :"+leftpadding);
-            int uncipherlength =totalLength- leftpadding;
-            System.out.println("uncipherlength :"+uncipherlength);
-            byte[] result4 = new byte [uncipherlength];
-            System.arraycopy(result2, 0, result4, 0, uncipherlength);
-            if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
-              b64toServer = new String(result4);
+              // System.out.println("uncipherlength :"+leftpadding);
+              int uncipherlength =result2.length- leftpadding;;
+              byte[] result4 = new byte [300];
+              System.arraycopy(result2, 0, result4, 0, uncipherlength);
+              if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
+                b64toServer = new String(result4);
+              }
+            }
+            else{
+              System.out.println("Wrong key to decipher");
             }
           }
-          else{
-            System.out.println("Wrong key to decipher");
+
+
+          if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
+            // for (int i=0;i<result2.length ;i++ ) {
+            //   System.out.print(" "+result2[i]);
+            // }
+            // System.out.print("\nfin res 3\n");
+
+             encoder = new BASE64Encoder();
+             b64toServer = encoder.encode(result2).replaceAll(System.getProperty("line.separator"),"");
           }
+
+        }catch(IOException e){
+          System.out.println(e.getMessage());
         }
+        System.out.println("b64t :"+b64toServer);
 
-        if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
-          for (int i=0;i<result2.length ;i++ ) {
-            System.out.print(" "+result2[i]);
-          }
-          System.out.print("\nfin res 3\n");
 
-           encoder = new BASE64Encoder();
-           b64toServer = encoder.encode(result2).replaceAll(System.getProperty("line.separator"),"");
-        }
-
-      }catch(IOException e){
-        System.out.println(e.getMessage());
-      }
       return b64toServer;
     }
 
