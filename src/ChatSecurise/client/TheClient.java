@@ -221,6 +221,8 @@ public class TheClient extends Thread{
 
       return b64toClient;
     }
+
+
     public String sendtoCard(byte typeINS, String message){
 
       BASE64Decoder decoder;
@@ -486,22 +488,36 @@ public class TheClient extends Thread{
 
     public String getFile(String filename){
 
-      File file;
-      String filedata = "";
+      File file= null;
+      String filedata="";
+      file = new File(filename);
+      long fileLength = file.length();
+      byte [] result = new byte [(int)fileLength];
+      int data =0;
       try{
-        BufferedReader reader = new BufferedReader(new FileReader(filename));
-        StringBuilder stringBuilder = new StringBuilder();
-        String line = null;
-        String ls = System.getProperty("line.separator");
-        while ((line = reader.readLine()) != null) {
-        	stringBuilder.append(line);
-        	// stringBuilder.append(ls);
+
+
+        FileInputStream inputstream = new FileInputStream(file);
+
+        while(((data = inputstream.read(result)) >= 0) ){
+
         }
+        // BufferedReader reader = new BufferedReader(new FileReader(filename));
+        // StringBuilder stringBuilder = new StringBuilder();
+        // String line = null;
+        // String ls = System.getProperty("line.separator");
+        // while ((line = reader.readLine()) != null) {
+        // 	stringBuilder.append(line);
+        	// stringBuilder.append(ls);
+        // }
         // delete the last new line separator
         // stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        reader.close();
+        // reader.close();
+        //
+        // filedata = stringBuilder.toString();
+        BASE64Encoder encoder = new BASE64Encoder();
+        filedata = encoder.encode(result).replaceAll(System.getProperty("line.separator"),"");
 
-        filedata = stringBuilder.toString();
       }catch(IOException e){
         System.out.println(e);
       }
@@ -515,9 +531,11 @@ public class TheClient extends Thread{
       int cursor;
         try {
             // os = new FileOutputStream(new File(filename));
-            os = new FileOutputStream(new File("RESULT.png"));
-            os.write(filedata.getBytes(), 0, filedata.length());
-        
+            os = new FileOutputStream(new File("AfterVictory.gif"));
+            BASE64Decoder decoder = new BASE64Decoder();
+            byte [] messageByte = decoder.decodeBuffer(filedata);
+            os.write(messageByte, 0, messageByte.length);
+
         } catch (IOException e) {
             e.printStackTrace();
         }finally{
