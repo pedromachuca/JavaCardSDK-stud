@@ -87,12 +87,9 @@ public class TheClient extends Thread{
       try{
         String message="";
         while(loop){
-          System.out.println("before cipher");
           message = consoleVersResInput.readLine();
-          System.out.println("before readliner");
           message= cipher(INS_DES_ECB_NOPAD_ENC, message);
           System.out.println("");
-
           consoleVersResOutput.println(message);
           if (message.equals("/quit")) {
               consoleVersResInput.close();
@@ -239,14 +236,11 @@ public class TheClient extends Thread{
             decoder = new BASE64Decoder();
             messageByte = decoder.decodeBuffer(message);
             totalLength= messageByte.length;
-             System.out.println("DMS "+DATAMAXSIZE);
-             System.out.println("totalLength :"+totalLength);
           }
           else{
             messageByte = message.getBytes();
             totalLength= messageByte.length;
           }
-          System.out.println("totalLength :"+totalLength);
           if (totalLength >=248) {
             DATAMAXSIZE = 248;
             leftpadding = (int)totalLength%DATAMAXSIZE;
@@ -262,8 +256,6 @@ public class TheClient extends Thread{
             DATAMAXSIZE = DATAMAXSIZE +8;
             leftpadding=8;
             lengthRes = lengthRes+8;
-            System.out.println("leftpadding : "+leftpadding);
-            System.out.println("inside DMS "+DATAMAXSIZE);
           }
           if (totalLength>248&&totalLength%8==0) {
             lengthRes = lengthRes+8;
@@ -274,8 +266,6 @@ public class TheClient extends Thread{
          int data = 0;
 
          byte[] result2 = new byte [lengthRes];
-         System.out.println("DMS "+DATAMAXSIZE);
-         System.out.println("totalLength :"+totalLength);
 
          InputStream inputstream = new ByteArrayInputStream(messageByte);
 
@@ -326,9 +316,7 @@ public class TheClient extends Thread{
         if (typeINS==INS_DES_ECB_NOPAD_DEC) {
           if (leftpadding>0){
 
-            System.out.println("leftpadding :"+leftpadding);
             int uncipherlength =totalLength- leftpadding;
-            System.out.println("uncipherlength :"+uncipherlength);
             byte[] result4 = new byte [uncipherlength];
             System.arraycopy(result2, 0, result4, 0, uncipherlength);
             if (typeINS ==INS_DES_ECB_NOPAD_DEC ) {
@@ -341,11 +329,6 @@ public class TheClient extends Thread{
         }
 
         if (typeINS ==INS_DES_ECB_NOPAD_ENC ) {
-          for (int i=0;i<result2.length ;i++ ) {
-            System.out.print(" "+result2[i]);
-          }
-          System.out.print("\nfin res 3\n");
-
            encoder = new BASE64Encoder();
            b64toServer = encoder.encode(result2).replaceAll(System.getProperty("line.separator"),"");
         }
@@ -373,9 +356,6 @@ public class TheClient extends Thread{
         for (int i=2;i<messageSplit.length ;i++ ) {
           messageSplit1[2] +=messageSplit[i]+" ";
         }
-        for (int i=0;i<6 ;i++ ) {
-          System.out.println("Cipher :"+messageSplit1[i] );
-        }
 
         switch(toDo){
           //tosend Broadcast
@@ -392,14 +372,11 @@ public class TheClient extends Thread{
           case 3:
             toSend =sendtoCard(typeINS,messageSplit1[2]);
             toSend = messageSplit[0]+" "+messageSplit[1]+" "+toSend;
-            System.out.println("toSend :"+toSend );
             break;
           //receive /sendMsg
           case 4:
-            System.out.println("messageSplit[1] :"+messageSplit[1] );
             toSend =sendtoCard(typeINS,messageSplit[1]);
             toSend = messageSplit[0]+" "+toSend;
-            System.out.println("toSend :"+toSend );
             break;
           //receive /quit
           case 5:
@@ -416,15 +393,12 @@ public class TheClient extends Thread{
             String tmp =getFile(messageSplit1[2]);
             toSend =sendtoCard(typeINS,tmp);
             toSend = messageSplit[0]+" "+messageSplit[1]+" "+messageSplit1[2]+toSend;
-            System.out.println("toSend :"+toSend );
             break;
           //receive file
           case 9:
-            System.out.println("messageSplit[1] :"+messageSplit[1] );
             toSend =sendtoCard(typeINS,messageSplit[3]);
             writeFile(toSend, messageSplit[2]);
             toSend = messageSplit[1]+" sent you the file : "+messageSplit[2];
-            System.out.println(messageSplit[1]+"toSend :"+toSend );
             break;
         //case default
           case 0:
@@ -441,10 +415,6 @@ public class TheClient extends Thread{
     public int checkMsg(String message){
       String[] messageSplit = new String[300];
       messageSplit = message.split(" ");
-
-      for (int i=0;i<messageSplit.length ;i++ ) {
-        System.out.println("checkMsg :"+messageSplit[i] );
-      }
 
       if(message.startsWith("/")){
         if (messageSplit[0].equals("/broadcast")) {
@@ -499,22 +469,8 @@ public class TheClient extends Thread{
 
         FileInputStream inputstream = new FileInputStream(file);
 
-        while(((data = inputstream.read(result)) >= 0) ){
+        while(((data = inputstream.read(result)) >= 0) ){}
 
-        }
-        // BufferedReader reader = new BufferedReader(new FileReader(filename));
-        // StringBuilder stringBuilder = new StringBuilder();
-        // String line = null;
-        // String ls = System.getProperty("line.separator");
-        // while ((line = reader.readLine()) != null) {
-        // 	stringBuilder.append(line);
-        	// stringBuilder.append(ls);
-        // }
-        // delete the last new line separator
-        // stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        // reader.close();
-        //
-        // filedata = stringBuilder.toString();
         BASE64Encoder encoder = new BASE64Encoder();
         filedata = encoder.encode(result).replaceAll(System.getProperty("line.separator"),"");
 
@@ -527,7 +483,6 @@ public class TheClient extends Thread{
 
     public void writeFile(String filedata, String filename){
       OutputStream os = null;
-      System.out.println("\nFILEDATA :"+ filedata);
       int cursor;
         try {
             // os = new FileOutputStream(new File(filename));
@@ -715,13 +670,8 @@ public class TheClient extends Thread{
     try{
       while(loop){
         String message="";
-        System.out.println("test");
-
         message = resVersConsoleInput.readLine();
-        System.out.println("DECIPHer : "+message);
         message = cipher(INS_DES_ECB_NOPAD_DEC, message);
-        System.out.println("After DECIPHer : "+message);
-
         resVersConsoleOutput.println(message);
       }
     }catch( IOException e ) {

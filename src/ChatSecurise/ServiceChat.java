@@ -226,15 +226,7 @@ public class ServiceChat extends Thread{
 
   public void sendFile(String user, String filename, String filedata){
     PrintStream usertosend;
-    System.out.println("user"+user);
-    System.out.println("fileName"+filedata);
 
-    System.out.println(" db "+database);
-    System.out.println(Arrays.asList(database));
-    System.out.println(outputs);
-    // System.out.println(" message "+message.length);
-    // System.out.println(" message[1] "+message[1]);
-    // System.out.println(" message[2] "+message[2]);
     try{
       usertosend = database.get(user);
       System.out.println("usertosend :"+usertosend);
@@ -242,22 +234,6 @@ public class ServiceChat extends Thread{
     }catch(Exception e){
       e.printStackTrace();
     }
-
-    // System.out.println("@"+username+": "+message[2]);
-
-    // try{
-    //   File file = new File(fileName);
-    //   BufferedReader br;
-    //   String st;
-    //   PrintStream usertosend;
-    //   usertosend = database.get(user);
-    //      br = new BufferedReader(new FileReader(file));
-    //     while ((st = br.readLine()) != null){
-    //       usertosend.println(st);
-    //     }
-    // }catch(IOException e){
-    //   System.out.println(e);
-    // }
   }
 
   public void help(){
@@ -266,13 +242,7 @@ public class ServiceChat extends Thread{
     output.println("@help "+encodedString );
   }
 
-  //
-  // public void updatedb(){
-  //   for (int i = 0 ; i < listUser.size() ; i++) {
-  //     database.put(listUser.get(i), outputs.get(i));
-  //   }
-  //   System.out.println(database);
-  // }
+
   public synchronized void updatedb(){
     database.put(username, output);
   }
@@ -280,9 +250,7 @@ public class ServiceChat extends Thread{
   public void parseMsg(String message){
     String[] messageSplit = new String[300];
     messageSplit = message.split(" ");
-    for (int i=0;i<messageSplit.length ;i++ ) {
-      System.out.println("parseMsg :"+messageSplit[i] );
-    }
+
     if(message.startsWith("/")){
       switch(messageSplit[0]){
         case "/list":
