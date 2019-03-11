@@ -482,7 +482,6 @@ public class TheClient extends Thread{
       }catch(IOException e){
         System.out.println(e);
       }
-      System.out.println(filedata);
       return filedata;
     }
 
@@ -511,7 +510,6 @@ public class TheClient extends Thread{
 
       byte[] cmd_ = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x00, (byte)0x00};
       CommandAPDU cmd = new CommandAPDU( cmd_ );
-      System.out.println("Modulus expected...Avec 0x00");
       ResponseAPDU resp = this.sendAPDU( cmd, DISPLAY );
       byte[] tmpmodulus = resp.getBytes();
       System.arraycopy(tmpmodulus, 1, modulus, 0, 128);
@@ -519,7 +517,6 @@ public class TheClient extends Thread{
 
       byte[] cmd_1 = {CLA, INS_GET_PUBLIC_RSA_KEY, P1, (byte)0x01, (byte)0x00};
       CommandAPDU cmd1 = new CommandAPDU( cmd_1 );
-      System.out.println("Exponent expected... Avec 0x01");
       ResponseAPDU resp1 = this.sendAPDU( cmd1, DISPLAY );
       byte[] tmpexponent = resp1.getBytes();
 
@@ -576,9 +573,6 @@ public class TheClient extends Thread{
         decoder = new BASE64Decoder();
         decodedBI = decoder.decodeBuffer(encodedString);
 
-        for (int i=0;i<decodedBI.length ;i++ ) {
-            System.out.print(" "+decodedBI[i]);
-        }
         byte[] cmd_part = {CLA, INS_RSA_DECRYPT, P1, P2, (byte)0x80};
         int size_part = cmd_part.length;
 
@@ -590,8 +584,7 @@ public class TheClient extends Thread{
         cmd_1[totalLength]=(byte)0x80;
 
         CommandAPDU cmd2 = new CommandAPDU( cmd_1 );
-        System.out.println("Decrypt RSA...");
-        displayAPDU(cmd2);
+        // System.out.println("Decrypt RSA...");
         ResponseAPDU resp = this.sendAPDU( cmd2, DISPLAY );
         byte[] clairBI = resp.getBytes();
 
@@ -656,7 +649,6 @@ public class TheClient extends Thread{
         loop1=false;
       }
       if (cmd.equals("/chall")) {
-        System.out.println("before sendchall ");
         sendChall();
         try{
           String message = resVersConsoleInput.readLine();

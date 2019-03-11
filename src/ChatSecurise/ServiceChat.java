@@ -118,7 +118,7 @@ public class ServiceChat extends Thread{
       encodedString = input.readLine();
       byte[] decodedBytes = Base64.getDecoder().decode(encodedString);
 
-      System.out.println("challengeBytes");
+      System.out.println("Challenge OK !");
       int compteur=0;
       for (int i=0;i<decodedBytes.length ;i++ ) {
           if (decodedBytes[i]==challengeBytes[i]) {
@@ -203,25 +203,13 @@ public class ServiceChat extends Thread{
   }
   public void sendMsg(String[] message){
     PrintStream usertosend;
-    for (int i=0;i<message.length;i++) {
-        System.out.println(i+" "+message[i]);
-    }
-    System.out.println(" db "+database);
-    System.out.println(Arrays.asList(database));
-    System.out.println(outputs);
-    System.out.println(" message "+message.length);
-    System.out.println(" message[1] "+message[1]);
-    System.out.println(" message[2] "+message[2]);
     try{
       usertosend = database.get(message[1]);
-      System.out.println("usertosend :"+usertosend);
       usertosend.println("@"+username+": "+message[2]);
     }catch(Exception e){
       e.printStackTrace();
     }
 
-    System.out.println("@"+username+": "+message[2]);
-    //   usertosend.print("\n");
   }
 
   public void sendFile(String user, String filename, String filedata){
@@ -229,7 +217,6 @@ public class ServiceChat extends Thread{
 
     try{
       usertosend = database.get(user);
-      System.out.println("usertosend :"+usertosend);
       usertosend.println("@sendFile "+username+" "+filename+" "+filedata);
     }catch(Exception e){
       e.printStackTrace();
