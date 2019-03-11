@@ -46,7 +46,7 @@ public class TheClient extends Thread{
 
 
   private PassThruCardService servClient = null;
-  final static boolean DISPLAY = true;
+  final static boolean DISPLAY = false;
   private  int DATAMAXSIZE             = 248;
 
   public static void main(String argv[]) throws Exception{
@@ -400,6 +400,9 @@ public class TheClient extends Thread{
             writeFile(toSend, messageSplit[2]);
             toSend = messageSplit[1]+" sent you the file : "+messageSplit[2];
             break;
+          case 10:
+            System.out.print(message);
+            break;
         //case default
           case 0:
             message = decodeb64(messageSplit[1]);
@@ -415,7 +418,6 @@ public class TheClient extends Thread{
     public int checkMsg(String message){
       String[] messageSplit = new String[300];
       messageSplit = message.split(" ");
-
       if(message.startsWith("/")){
         if (messageSplit[0].equals("/broadcast")) {
           return 2;
@@ -434,6 +436,9 @@ public class TheClient extends Thread{
         }
         else if (messageSplit[0].equals("/sendFile")) {
           return 8;
+        }
+        else if (messageSplit[0].equals("/Vous")) {
+            return 10;
         }
       }
       else if ( message.startsWith("@")) {
